@@ -1,48 +1,58 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Docente extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      Docente.hasMany(models.Contrato, {
-        foreignKey: 'docenteld',
-        as: 'contratos'
+      this.belongsTo(models.Persona, {
+        foreignKey: 'personaId',
+        as: 'persona'
       });
-
-      Docente.belongsTo(models.CategoriaEmpleado, {
+      this.belongsTo(models.CategoriaEmpleado, {
         foreignKey: 'categoriaId',
         as: 'categoria'
       });
     }
   }
+
   Docente.init({
     numEmpleado: {
       type: DataTypes.INTEGER,
       unique: true,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notNull: true,
+        isInt: true,
+        len: [5, 10] // Ajusta según tus requisitos
+      }
     },
-    nombre: {
-      type: DataTypes.STRING,
-      allowNull: false
+    personaId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Personas',
+        key: 'id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT'
     },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false
+    categoriaId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'CategoriaEmpleados',
+        key: 'clave'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT'
     }
   }, {
     sequelize,
     modelName: 'Docente',
-    name:{
-      singular: "Docente",
-      plural: "Docentes"
-    },
-    
+    tableName: 'Docentes',
+    timestamps: true,
+    paranoid: true
   });
+
   return Docente;
 };

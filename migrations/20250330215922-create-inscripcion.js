@@ -9,11 +9,21 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      estudianteld: {
-        type: Sequelize.INTEGER
+      estudianteId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references:{
+          model: 'Estudiantes',
+          key: 'id'
+        }
       },
       asignaturaId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references:{
+          model: 'Asignaturas',
+          key: 'id'
+        }
       },
       semestre: {
         type: Sequelize.INTEGER
@@ -29,6 +39,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
+      
     });
   },
   async down(queryInterface, Sequelize) {

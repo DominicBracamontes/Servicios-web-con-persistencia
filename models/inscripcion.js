@@ -11,19 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Inscripcion.belongsTo(models.Estudiante, {
-        foreignKey: 'estudianteld',
-        as: 'estudiante'
-      });
-
-      Inscripcion.belongsTo(models.Asignatura, {
-        foreignKey: 'asignaturaId',
-        as: 'asignatura'
-      });
+      
     }
   }
   Inscripcion.init({
-    estudianteld: {
+    estudianteId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
@@ -58,7 +50,6 @@ module.exports = (sequelize, DataTypes) => {
       {
         unique: true,
         fields: ['estudianteld', 'asignaturaId', 'semestre'],
-        name: 'unique_inscripcion'
       }
     ]
   });

@@ -31,8 +31,7 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Docentes',
         key: 'id'
       },
-      onDelete: 'CASCADE', 
-      onUpdate: 'CASCADE'
+      
     },
     asignaturaId: {
       type: DataTypes.INTEGER,
@@ -41,8 +40,7 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Asignaturas',
         key: 'id'
       },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE'
+      
     }
   }, {
     sequelize,
@@ -56,7 +54,6 @@ module.exports = (sequelize, DataTypes) => {
       {
         unique: true, 
         fields: ['docenteld', 'asignaturaId'],
-        name: 'unique_contrato_docente_asignatura'
       }
     ],
     timestamps: true 

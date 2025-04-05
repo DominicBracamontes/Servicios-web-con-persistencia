@@ -1,43 +1,50 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Estudiante extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // define association here
-      Estudiante.hasMany(models.Inscripcion, {
-        foreignKey: 'estudianteld',
-        as: 'inscripciones'
+      this.belongsTo(models.Persona, {
+        foreignKey: 'personaId',
+        as: 'persona'
+      });
+
+      this.belongsToMany(models.Asignatura, {
+        through: "Inscripciones", // Mejor usar el modelo directamente: models.Inscripcion
+        foreignKey: 'estudianteId',
+        as: 'asignaturas'
       });
     }
   }
+
   Estudiante.init({
     matricula: {
       type: DataTypes.INTEGER,
       unique: true,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notNull: true,
+        isInt: true,
+        len: [8, 8] // Si las matrículas tienen longitud fija (ej. 8 dígitos)
+      }
     },
-    nombre: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false
+    personaId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Personas',
+        key: 'id'
+      },
+      onUpdate: 'CASCADE', // Recomendado añadir
+      onDelete: 'RESTRICT' // O 'CASCADE' según tu lógica de negocio
     }
   }, {
     sequelize,
-    modelName: 'Estudiantes',
-    name: {
-      singular:'Estudiante',
-      plural:'Estudiantes'
-    }    
+    modelName: 'Estudiante',
+    tableName: 'Estudiantes',
+    timestamps: true,
+    paranoid: true // Bueno si necesitas eliminación lógica
   });
+
   return Estudiante;
 };
