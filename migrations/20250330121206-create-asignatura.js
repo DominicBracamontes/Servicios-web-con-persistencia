@@ -16,7 +16,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       creditos: {
-        type: Sequelize.INTEGER
+      type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,

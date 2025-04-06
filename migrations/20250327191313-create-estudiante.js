@@ -9,11 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      matricula: {
-        type: Sequelize.INTEGER,
-        unique: true,
-        allowNull: false // Faltaba este constraint que sí está en el modelo
-      },
       personaId: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -21,8 +16,11 @@ module.exports = {
           model: 'Personas',
           key: 'id'
         },
-        onUpdate: 'CASCADE', // Recomendado añadir para consistencia
-        onDelete: 'RESTRICT' // O 'CASCADE' según tu lógica
+      },
+      matricula: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        unique: true
       },
       createdAt: {
         allowNull: false,
@@ -32,19 +30,12 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       },
-      deletedAt: { // Necesario si usas paranoid: true
+      deletedAt: {
         type: Sequelize.DATE,
         allowNull: true
       }
     });
-
-    // Índice adicional para mejor performance en búsquedas por matrícula
-    await queryInterface.addIndex('Estudiantes', ['matricula'], {
-      unique: true,
-      name: 'estudiantes_matricula_unique'
-    });
   },
-
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Estudiantes');
   }

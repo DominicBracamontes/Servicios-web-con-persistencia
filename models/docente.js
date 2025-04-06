@@ -22,8 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       validate: {
         notNull: true,
-        isInt: true,
-        len: [5, 10] // Ajusta según tus requisitos
+        isInt: true
       }
     },
     personaId: {
@@ -32,9 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       references: {
         model: 'Personas',
         key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT'
+      }
     },
     categoriaId: {
       type: DataTypes.INTEGER,
@@ -42,9 +39,7 @@ module.exports = (sequelize, DataTypes) => {
       references: {
         model: 'CategoriaEmpleados',
         key: 'clave'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT'
+      }
     }
   }, {
     sequelize,

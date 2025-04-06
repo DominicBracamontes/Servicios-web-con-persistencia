@@ -1,19 +1,23 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Inscripcion extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // define association here
+      // Definir relación con Estudiante
+      this.belongsTo(models.Estudiante, {
+        foreignKey: 'estudianteId',
+        as: 'estudiante'
+      });
       
+      // Definir relación con Asignatura
+      this.belongsTo(models.Asignatura, {
+        foreignKey: 'asignaturaId',
+        as: 'asignatura'
+      });
     }
   }
+  
   Inscripcion.init({
     estudianteId: {
       type: DataTypes.INTEGER,
@@ -37,21 +41,23 @@ module.exports = (sequelize, DataTypes) => {
     },
     calificacion: {
       type: DataTypes.FLOAT,
-      allowNull: false
+      allowNull: true
     }
   }, {
     sequelize,
     modelName: 'Inscripcion',
-    name:{
+    tableName: 'Inscripciones',
+    name: {
       singular: "Inscripcion",
       plural: "Inscripciones"
     },
     indexes: [
       {
         unique: true,
-        fields: ['estudianteld', 'asignaturaId', 'semestre'],
+        fields: ['estudianteId', 'asignaturaId', 'semestre']
       }
     ]
   });
+  
   return Inscripcion;
 };
