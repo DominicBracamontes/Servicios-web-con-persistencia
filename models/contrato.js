@@ -1,63 +1,56 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Contrato extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      
       Contrato.belongsTo(models.Docente, {
-        foreignKey: 'docenteld', 
+        foreignKey: 'docenteId', 
+        targetKey: 'numEmpleado', // Asegurar que referencia el campo correcto
         as: 'docente' 
       });
+      
       Contrato.belongsTo(models.Asignatura, {
-        foreignKey: 'asignaturaId',
+        foreignKey: 'asignaturaId', // Cambiado para coincidir con el diagrama
+        targetKey: 'clave', // Referencia a 'clave' en Asignatura según diagrama
         as: 'asignatura'
       });
-      
-
     }
   }
+
   Contrato.init({
-    docenteld: {
+    docenteId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'Docentes',
-        key: 'id'
-      },
-      
+        key: 'numEmpleado' // Debe referenciar numEmpleado, no id
+      }
     },
-    asignaturaId: {
+    asignaturaId: { // Cambiado de asignaturaId para coincidir con diagrama
       type: DataTypes.INTEGER,
       allowNull: false,
       references: { 
         model: 'Asignaturas',
-        key: 'id'
-      },
-      
+        key: 'clave' // Según diagrama, Asignatura usa 'clave' como identificador
+      }
     }
   }, {
     sequelize,
     modelName: 'Contrato',
     name: {
-      singular:'Contrato',
-      plural:'Contratos'
+      singular: 'Contrato',
+      plural: 'Contratos'
     },
-    
     indexes: [
       {
         unique: true, 
-        fields: ['docenteld', 'asignaturaId'],
+        fields: ['docenteId', 'asignaturaId'], // Clave compuesta
       }
     ],
-    timestamps: true 
-    
+    timestamps: true,
+    paranoid: true // Opcional, si necesitas soft delete
   });
+
   return Contrato;
 };

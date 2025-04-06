@@ -9,8 +9,9 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      docenteld: {
-        type: Sequelize.INTEGER
+      docenteId: {
+        type: Sequelize.INTEGER,
+        
       },
       asignaturaId: {
         type: Sequelize.INTEGER

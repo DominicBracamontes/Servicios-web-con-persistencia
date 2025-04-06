@@ -1,5 +1,5 @@
+// migrations/XXXXXX-create-inscripcion.js
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Inscripciones', {
@@ -12,24 +12,26 @@ module.exports = {
       estudianteId: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references:{
+        references: {
           model: 'Estudiantes',
-          key: 'id'
+          key: 'matricula'
         }
       },
       asignaturaId: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references:{
+        references: {
           model: 'Asignaturas',
-          key: 'id'
+          key: 'clave' // Referencia al campo único
         }
       },
       semestre: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false
       },
       calificacion: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
+        allowNull: true
       },
       createdAt: {
         allowNull: false,
@@ -39,10 +41,16 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
-      
+    });
+
+    // Índice compuesto para evitar inscripciones duplicadas
+    await queryInterface.addIndex('Inscripciones', {
+      fields: ['estudianteId', 'asignaturaId', 'semestre'],
+      unique: true,
+      name: 'inscripcion_unica'
     });
   },
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable('Inscripciones');
   }
 };

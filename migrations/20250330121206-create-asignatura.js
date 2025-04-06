@@ -1,5 +1,5 @@
+// migrations/XXXXXX-create-asignatura.js
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Asignaturas', {
@@ -10,13 +10,17 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       clave: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        unique: true, // ESTA LÍNEA ES CRUCIAL
+        allowNull: false
       },
       nombre: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       creditos: {
-      type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false
       },
       createdAt: {
         allowNull: false,
@@ -28,7 +32,7 @@ module.exports = {
       }
     });
   },
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable('Asignaturas');
   }
 };

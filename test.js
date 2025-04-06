@@ -3,25 +3,50 @@ const { sequelize } = models;
 
 async function test() {
   try {
-    // Limpieza inicial
+    // Limpieza inicial (en orden inverso a las dependencias)
     await sequelize.query('DELETE FROM Inscripciones');
+    await sequelize.query('DELETE FROM Contratos');
     await models.Estudiante.destroy({ where: {}, force: true });
+    await models.Docente.destroy({ where: {}, force: true });
     await models.Asignatura.destroy({ where: {}, force: true });
     await models.Persona.destroy({ where: {}, force: true });
+    await models.CategoriaEmpleado.destroy({ where: {}, force: true });
 
-    console.log('\n=== CREAR PERSONA ===');
-    const persona = await models.Persona.create({
+    console.log('\n=== CREAR PERSONA ESTUDIANTE ===');
+    const personaEstudiante = await models.Persona.create({
       nombre: 'Juan Pérez',
       email: 'juan@example.com'
     });
-    console.log('Persona creada:', persona.toJSON());
+    console.log('Persona (estudiante) creada:', personaEstudiante.toJSON());
 
     console.log('\n=== CREAR ESTUDIANTE ===');
     const estudiante = await models.Estudiante.create({
       matricula: 1234,
-      personaId: persona.id
+      personaId: personaEstudiante.id
     });
     console.log('Estudiante creado:', estudiante.toJSON());
+
+    console.log('\n=== CREAR PERSONA DOCENTE ===');
+    const personaDocente = await models.Persona.create({
+      nombre: 'María García',
+      email: 'maria@example.com'
+    });
+    console.log('Persona (docente) creada:', personaDocente.toJSON());
+
+    console.log('\n=== CREAR CATEGORÍA EMPLEADO ===');
+    const categoria = await models.CategoriaEmpleado.create({
+      clave: 1,
+      nombre: 'Profesor Titular'
+    });
+    console.log('Categoría creada:', categoria.toJSON());
+
+    console.log('\n=== CREAR DOCENTE ===');
+    const docente = await models.Docente.create({
+      numEmpleado: 5678,
+      personaId: personaDocente.id,
+      categoriaId: categoria.clave
+    });
+    console.log('Docente creado:', docente.toJSON());
 
     console.log('\n=== CREAR ASIGNATURA ===');
     const asignatura = await models.Asignatura.create({
@@ -31,7 +56,7 @@ async function test() {
     });
     console.log('Asignatura creada:', asignatura.toJSON());
 
-    console.log('\n=== ASOCIAR ASIGNATURA CON ESTUDIANTE ===');
+    console.log('\n=== INSCRIBIR ESTUDIANTE A ASIGNATURA ===');
     const inscripcion = await models.Inscripcion.create({
       estudianteId: estudiante.id,
       asignaturaId: asignatura.id,
@@ -40,47 +65,65 @@ async function test() {
     });
     console.log('Inscripción creada:', inscripcion.toJSON());
 
-    console.log('\n=== VERIFICAR ASOCIACIÓN ===');
-    
-    // Verificación directa desde la tabla Inscripciones (CORREGIDO)
-    const inscripciones = await models.Inscripcion.findAll({
-      where: { estudianteId: estudiante.id },
-      include: [
-        { 
-          model: models.Estudiante,
-          as: 'estudiante' // Alias definido en el modelo Inscripcion
-        },
-        { 
-          model: models.Asignatura,
-          as: 'asignatura' // Alias definido en el modelo Inscripcion
-        }
-      ]
+    console.log('\n=== ASIGNAR DOCENTE A ASIGNATURA ===');
+    const contrato = await models.Contrato.create({
+      docenteId: docente.id,
+      asignaturaId: asignatura.id
     });
-    console.log('Inscripciones directas:', JSON.stringify(inscripciones, null, 2));
+    console.log('Contrato creado:', contrato.toJSON());
 
-    // Verificación desde el modelo Estudiante (CORRECTO)
-    const estudianteConAsignaturas = await models.Estudiante.findByPk(estudiante.id, {
+    console.log('\n=== VERIFICAR RELACIONES ===');
+
+    // 1. Verificación desde Estudiante (sin paranoid)
+    const estudianteConAsignaturas = await models.Estudiante.findOne({
+      where: { id: estudiante.id },
       include: [{
         model: models.Asignatura,
-        as: 'asignaturas', // Alias definido en el modelo Estudiante
+        as: 'asignaturas',
         through: {
           attributes: ['semestre', 'calificacion']
         }
-      }]
+      }],
+      paranoid: false // Desactiva paranoid para esta consulta
     });
-    console.log('Estudiante con asignaturas:', JSON.stringify(estudianteConAsignaturas, null, 2));
+    console.log('Estudiante con asignaturas:', JSON.stringify(estudianteConAsignaturas.toJSON(), null, 2));
 
-    // Verificación desde el modelo Asignatura (CORRECTO)
-    const asignaturaConEstudiantes = await models.Asignatura.findByPk(asignatura.id, {
-      include: [{
-        model: models.Estudiante,
-        as: 'estudiantes', // Alias definido en el modelo Asignatura
-        through: {
-          attributes: ['semestre', 'calificacion']
+    // 2. Verificación desde Asignatura (sin paranoid)
+    const asignaturaCompleta = await models.Asignatura.findOne({
+      where: { id: asignatura.id },
+      include: [
+        {
+          model: models.Estudiante,
+          as: 'estudiantes',
+          through: {
+            attributes: ['semestre', 'calificacion']
+          },
+          paranoid: false
+        },
+        {
+          model: models.Docente,
+          as: 'docentes',
+          through: {
+            attributes: []
+          },
+          paranoid: false
         }
-      }]
+      ],
+      paranoid: false
     });
-    console.log('Asignatura con estudiantes:', JSON.stringify(asignaturaConEstudiantes, null, 2));
+    console.log('Asignatura con estudiantes y docentes:', JSON.stringify(asignaturaCompleta.toJSON(), null, 2));
+
+    // 3. Verificación desde Docente (sin paranoid)
+    const docenteConAsignaturas = await models.Docente.findOne({
+      where: { id: docente.id },
+      include: [{
+        model: models.Asignatura,
+        as: 'asignaturas',
+        paranoid: false
+      }],
+      paranoid: false
+    });
+    console.log('Docente con asignaturas:', JSON.stringify(docenteConAsignaturas.toJSON(), null, 2));
 
   } catch (error) {
     console.error('\n=== ERROR EN LAS PRUEBAS ===');
@@ -96,6 +139,7 @@ async function test() {
     
     if (error.parent) {
       console.error('Error SQL:', error.parent.sqlMessage);
+      console.error('SQL:', error.parent.sql);
     }
   } finally {
     await sequelize.close();

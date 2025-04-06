@@ -1,30 +1,28 @@
+// models/inscripcion.js
 'use strict';
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class Inscripcion extends Model {
     static associate(models) {
-      // Definir relación con Estudiante
       this.belongsTo(models.Estudiante, {
         foreignKey: 'estudianteId',
-        as: 'estudiante'
+        targetKey: 'matricula' // Referenciamos por matrícula
       });
-      
-      // Definir relación con Asignatura
       this.belongsTo(models.Asignatura, {
         foreignKey: 'asignaturaId',
-        as: 'asignatura'
+        targetKey: 'clave' // Referenciamos por clave
       });
     }
   }
-  
+
   Inscripcion.init({
     estudianteId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'Estudiantes',
-        key: 'id'
+        key: 'matricula' // Referencia a matrícula, no a id
       }
     },
     asignaturaId: {
@@ -32,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       references: {
         model: 'Asignaturas',
-        key: 'id'
+        key: 'clave' // Referencia a clave, no a id
       }
     },
     semestre: {
@@ -47,17 +45,8 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Inscripcion',
     tableName: 'Inscripciones',
-    name: {
-      singular: "Inscripcion",
-      plural: "Inscripciones"
-    },
-    indexes: [
-      {
-        unique: true,
-        fields: ['estudianteId', 'asignaturaId', 'semestre']
-      }
-    ]
+    timestamps: true
   });
-  
+
   return Inscripcion;
 };

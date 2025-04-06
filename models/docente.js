@@ -4,13 +4,24 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Docente extends Model {
     static associate(models) {
+      // Relación con Persona (hereda nombre y email)
       this.belongsTo(models.Persona, {
         foreignKey: 'personaId',
         as: 'persona'
       });
+      
+      // Relación con CategoriaEmpleado
       this.belongsTo(models.CategoriaEmpleado, {
         foreignKey: 'categoriaId',
         as: 'categoria'
+      });
+      
+      // Relación many-to-many con Asignatura a través de Contrato
+      this.belongsToMany(models.Asignatura, {
+        through: 'Contratos',
+        foreignKey: 'docenteId',  // Esto debe coincidir con numEmpleado
+        otherKey: 'asignaturaId',
+        as: 'asignaturas'
       });
     }
   }
@@ -18,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
   Docente.init({
     numEmpleado: {
       type: DataTypes.INTEGER,
-      unique: true,
+      primaryKey: true,
       allowNull: false,
       validate: {
         notNull: true,
@@ -46,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Docente',
     tableName: 'Docentes',
     timestamps: true,
-    paranoid: true
+    paranoid: false
   });
 
   return Docente;

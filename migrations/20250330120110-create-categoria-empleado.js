@@ -1,5 +1,5 @@
+// migrations/XXXXXX-create-categoria-empleado.js
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('CategoriaEmpleados', {
@@ -10,10 +10,13 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       clave: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        unique: true, // Esto es crucial
+        allowNull: false
       },
       nombre: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       createdAt: {
         allowNull: false,
@@ -25,7 +28,7 @@ module.exports = {
       }
     });
   },
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable('CategoriaEmpleados');
   }
 };

@@ -8,11 +8,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'personaId',
         as: 'persona'
       });
-
+      
       this.belongsToMany(models.Asignatura, {
-        through: "Inscripciones",
+        through: 'Inscripciones',
         foreignKey: 'estudianteId',
-        as: 'asignaturas'
+        otherKey: 'asignaturaId',
+        as: 'asignaturas' // Asegúrate que este alias coincida
       });
     }
   }
