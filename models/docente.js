@@ -4,24 +4,27 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Docente extends Model {
     static associate(models) {
-      // Relación con Persona (hereda nombre y email)
       this.belongsTo(models.Persona, {
         foreignKey: 'personaId',
-        as: 'persona'
+        as: 'persona',
+        onDelete: 'CASCADE'
+      });
+
+      Docente.hasMany(models.Contrato, {
+        foreignKey: 'docenteId',
+        as: 'contratos',
       });
       
-      // Relación con CategoriaEmpleado
       this.belongsTo(models.CategoriaEmpleado, {
         foreignKey: 'categoriaId',
         as: 'categoria'
       });
       
-      // Relación many-to-many con Asignatura a través de Contrato
       this.belongsToMany(models.Asignatura, {
         through: 'Contratos',
-        foreignKey: 'docenteId',  // Esto debe coincidir con numEmpleado
+        foreignKey: 'docenteId',  
         otherKey: 'asignaturaId',
-        as: 'asignaturas'
+        as: 'asignaturas',
       });
     }
   }
@@ -47,6 +50,7 @@ module.exports = (sequelize, DataTypes) => {
     categoriaId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      defaultValue: 0,
       references: {
         model: 'CategoriaEmpleados',
         key: 'clave'

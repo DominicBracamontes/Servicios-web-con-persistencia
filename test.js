@@ -58,8 +58,8 @@ async function test() {
 
     console.log('\n=== INSCRIBIR ESTUDIANTE A ASIGNATURA ===');
     const inscripcion = await models.Inscripcion.create({
-      estudianteId: estudiante.id,
-      asignaturaId: asignatura.id,
+      estudianteId: estudiante.matricula,
+      asignaturaId: asignatura.clave,
       semestre: 20251,
       calificacion: 8.5
     });
@@ -67,14 +67,13 @@ async function test() {
 
     console.log('\n=== ASIGNAR DOCENTE A ASIGNATURA ===');
     const contrato = await models.Contrato.create({
-      docenteId: docente.id,
-      asignaturaId: asignatura.id
+      docenteId: docente.numEmpleado,
+      asignaturaId: asignatura.clave
     });
     console.log('Contrato creado:', contrato.toJSON());
 
     console.log('\n=== VERIFICAR RELACIONES ===');
 
-    // 1. Verificación desde Estudiante (sin paranoid)
     const estudianteConAsignaturas = await models.Estudiante.findOne({
       where: { id: estudiante.id },
       include: [{
@@ -84,11 +83,10 @@ async function test() {
           attributes: ['semestre', 'calificacion']
         }
       }],
-      paranoid: false // Desactiva paranoid para esta consulta
+      paranoid: false 
     });
     console.log('Estudiante con asignaturas:', JSON.stringify(estudianteConAsignaturas.toJSON(), null, 2));
 
-    // 2. Verificación desde Asignatura (sin paranoid)
     const asignaturaCompleta = await models.Asignatura.findOne({
       where: { id: asignatura.id },
       include: [
@@ -113,7 +111,6 @@ async function test() {
     });
     console.log('Asignatura con estudiantes y docentes:', JSON.stringify(asignaturaCompleta.toJSON(), null, 2));
 
-    // 3. Verificación desde Docente (sin paranoid)
     const docenteConAsignaturas = await models.Docente.findOne({
       where: { id: docente.id },
       include: [{

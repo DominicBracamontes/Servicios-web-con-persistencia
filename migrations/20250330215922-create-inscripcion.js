@@ -1,4 +1,3 @@
-// migrations/XXXXXX-create-inscripcion.js
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -16,13 +15,17 @@ module.exports = {
           model: 'Estudiantes',
           key: 'matricula'
         }
+      ,onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       },
       asignaturaId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
           model: 'Asignaturas',
-          key: 'clave' // Referencia al campo único
+          key: 'clave', 
+          onDelete: 'RESTRICT',
+        onUpdate: 'CASCADE'
         }
       },
       semestre: {
@@ -43,7 +46,6 @@ module.exports = {
       }
     });
 
-    // Índice compuesto para evitar inscripciones duplicadas
     await queryInterface.addIndex('Inscripciones', {
       fields: ['estudianteId', 'asignaturaId', 'semestre'],
       unique: true,

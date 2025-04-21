@@ -1,4 +1,3 @@
-// models/inscripcion.js
 'use strict';
 const { Model } = require('sequelize');
 
@@ -7,11 +6,17 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       this.belongsTo(models.Estudiante, {
         foreignKey: 'estudianteId',
-        targetKey: 'matricula' // Referenciamos por matrícula
+        targetKey: 'matricula', 
+        as: 'estudiante',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       });
       this.belongsTo(models.Asignatura, {
         foreignKey: 'asignaturaId',
-        targetKey: 'clave' // Referenciamos por clave
+        targetKey: 'clave', 
+        as: 'asignatura',
+        onDelete: 'RESTRICT',
+        onUpdate: 'CASCADE'
       });
     }
   }
@@ -22,15 +27,20 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       references: {
         model: 'Estudiantes',
-        key: 'matricula' // Referencia a matrícula, no a id
-      }
+        key: 'matricula', 
+         onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+      },
+      
     },
     asignaturaId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'Asignaturas',
-        key: 'clave' // Referencia a clave, no a id
+        key: 'clave', 
+        onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT'
       }
     },
     semestre: {

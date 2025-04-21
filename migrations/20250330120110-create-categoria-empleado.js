@@ -1,4 +1,3 @@
-// migrations/XXXXXX-create-categoria-empleado.js
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -11,7 +10,7 @@ module.exports = {
       },
       clave: {
         type: Sequelize.INTEGER,
-        unique: true, // Esto es crucial
+        unique: true, 
         allowNull: false
       },
       nombre: {

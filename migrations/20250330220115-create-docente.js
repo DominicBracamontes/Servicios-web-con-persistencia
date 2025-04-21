@@ -1,4 +1,3 @@
-// migrations/XXXXXX-create-docente.js
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -27,7 +26,7 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'CategoriaEmpleados',
-          key: 'clave' // Referencia al campo único
+          key: 'clave' 
         }
       },
       createdAt: {

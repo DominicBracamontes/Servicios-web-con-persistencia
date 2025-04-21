@@ -14,7 +14,9 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Personas',
-          key: 'id'
+          key: 'id',
+          onDelete: 'CASCADE', 
+        onUpdate: 'CASCADE'
         },
       },
       matricula: {

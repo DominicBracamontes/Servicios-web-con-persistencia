@@ -11,11 +11,25 @@ module.exports = {
       },
       docenteId: {
         type: Sequelize.INTEGER,
-        
+        allowNull: false,
+        references: {
+          model: 'Docentes',
+          key: 'numEmpleado' 
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       },
       asignaturaId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Asignaturas',
+          key: 'clave'
+        },
+        onDelete: 'RESTRICT', 
+        onUpdate: 'CASCADE' 
       },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

@@ -6,12 +6,15 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Persona.hasOne(models.Estudiante, {
         foreignKey: 'personaId',
-        as: 'estudiante'
-      });
-      Persona.hasOne(models.Docente, {
+        as: 'estudiante',
+        onDelete: 'CASCADE' 
+    });
+    
+    Persona.hasOne(models.Docente, {
         foreignKey: 'personaId',
-        as: 'docente'
-      });
+        as: 'docente',
+        onDelete: 'CASCADE' 
+    });
     }
   }
 

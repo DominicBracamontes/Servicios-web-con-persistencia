@@ -1,4 +1,3 @@
-// migrations/XXXXXX-create-asignatura.js
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -11,7 +10,7 @@ module.exports = {
       },
       clave: {
         type: Sequelize.INTEGER,
-        unique: true, // ESTA LÍNEA ES CRUCIAL
+        unique: true, 
         allowNull: false
       },
       nombre: {

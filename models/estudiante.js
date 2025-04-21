@@ -6,14 +6,16 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       this.belongsTo(models.Persona, {
         foreignKey: 'personaId',
-        as: 'persona'
+        as: 'persona',
+        onDelete: 'CASCADE'
       });
       
       this.belongsToMany(models.Asignatura, {
         through: 'Inscripciones',
         foreignKey: 'estudianteId',
         otherKey: 'asignaturaId',
-        as: 'asignaturas' // Asegúrate que este alias coincida
+        as: 'asignaturas',
+        onDelete: 'CASCADE' 
       });
     }
   }
@@ -33,7 +35,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       references: {
         model: 'Personas',
-        key: 'id'
+        key: 'id',
+        onDelete: 'CASCADE'
       }
       
     }
@@ -44,7 +47,7 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Estudiante',
     tableName: 'Estudiantes',
     timestamps: true,
-    paranoid: true
+    paranoid: false
   });
 
   return Estudiante;

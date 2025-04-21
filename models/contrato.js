@@ -6,14 +6,18 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Contrato.belongsTo(models.Docente, {
         foreignKey: 'docenteId', 
-        targetKey: 'numEmpleado', // Asegurar que referencia el campo correcto
-        as: 'docente' 
+        targetKey: 'numEmpleado', 
+        as: 'docente',
+         onDelete: 'CASCADE', 
+      onUpdate: 'CASCADE'
       });
       
       Contrato.belongsTo(models.Asignatura, {
-        foreignKey: 'asignaturaId', // Cambiado para coincidir con el diagrama
-        targetKey: 'clave', // Referencia a 'clave' en Asignatura según diagrama
-        as: 'asignatura'
+        foreignKey: 'asignaturaId', 
+        targetKey: 'clave', 
+        as: 'asignatura',
+        onDelete: 'RESTRICT', 
+      onUpdate: 'CASCADE'
       });
     }
   }
@@ -24,15 +28,20 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       references: {
         model: 'Docentes',
-        key: 'numEmpleado' // Debe referenciar numEmpleado, no id
+        key: 'numEmpleado', 
+        onDelete: 'CASCADE', 
+      onUpdate: 'CASCADE'
       }
+      
     },
-    asignaturaId: { // Cambiado de asignaturaId para coincidir con diagrama
+    asignaturaId: { 
       type: DataTypes.INTEGER,
       allowNull: false,
       references: { 
         model: 'Asignaturas',
-        key: 'clave' // Según diagrama, Asignatura usa 'clave' como identificador
+        key: 'clave',
+        onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT'
       }
     }
   }, {
@@ -45,11 +54,11 @@ module.exports = (sequelize, DataTypes) => {
     indexes: [
       {
         unique: true, 
-        fields: ['docenteId', 'asignaturaId'], // Clave compuesta
+        fields: ['docenteId', 'asignaturaId'], 
       }
     ],
     timestamps: true,
-    paranoid: true // Opcional, si necesitas soft delete
+    paranoid: false 
   });
 
   return Contrato;
