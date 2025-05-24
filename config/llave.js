@@ -1,0 +1,1 @@
+module.exports = 'tu-clave-secreta-muy-segura'; // Cambia esto por una clave segura

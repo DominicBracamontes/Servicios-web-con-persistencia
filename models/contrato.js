@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'asignaturaId', 
         targetKey: 'clave', 
         as: 'asignatura',
-        onDelete: 'RESTRICT', 
+        onDelete: 'CASCADE', 
       onUpdate: 'CASCADE'
       });
     }
@@ -40,8 +40,9 @@ module.exports = (sequelize, DataTypes) => {
       references: { 
         model: 'Asignaturas',
         key: 'clave',
-        onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT'
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
+      
       }
     }
   }, {

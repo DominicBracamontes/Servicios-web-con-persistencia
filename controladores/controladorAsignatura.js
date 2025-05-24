@@ -129,291 +129,259 @@ module.exports = {
     }
   },
 
-  async actualizarAsignaturaPUT(req, res) {
-    const transaction = await sequelize.transaction();
-    try {
-      const { clave } = req.params;
-      const { nuevaClave, nombre, creditos } = req.body;
-  
-      if (!nuevaClave || !nombre || creditos === undefined) {
-        await transaction.rollback();
-        const camposFaltantes = [];
-        if (!nuevaClave) camposFaltantes.push('nuevaClave');
-        if (!nombre) camposFaltantes.push('nombre');
-        if (creditos === undefined) camposFaltantes.push('creditos');
-        
-        return res.status(400).json({ 
-          error: 'Faltan parámetros requeridos',
-          mensaje: `Para actualización completa (PUT) deben proporcionarse todos los campos obligatorios.`,
-          camposFaltantes,
-          camposRequeridos: ['nuevaClave', 'nombre', 'creditos'],
-          ejemplo: {
-            nuevaClave: "NuevoValorClave",
-            nombre: "Nuevo nombre de asignatura",
-            creditos: 4
-          }
-        });
-      }
-  
-      const asignatura = await Asignatura.findOne({ 
-        where: { clave },
-        transaction
-      });
-  
-      if (!asignatura) {
-        await transaction.rollback();
-        return res.status(404).json({ 
-          error: 'Recurso no encontrado',
-          mensaje: `No se encontró ninguna asignatura con la clave ${clave}`,
-          sugerencia: 'Verifique la clave e intente nuevamente'
-        });
-      }
-  
-      if (nuevaClave !== clave) {
-        const existe = await Asignatura.findOne({ 
-          where: { clave: nuevaClave },
-          transaction
-        });
-        
-        if (existe) {
-          await transaction.rollback();
-          return res.status(409).json({ 
-            error: 'Conflicto de claves',
-            mensaje: `Ya existe una asignatura con la clave ${nuevaClave}`,
-            asignaturaExistente: {
-              clave: existe.clave,
-              nombre: existe.nombre,
-              creditos: existe.creditos
-            },
-            sugerencia: 'Proporcione una clave única para la asignatura'
-          });
-        }
-  
-        await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction });
-  
-        try {
-          await Promise.all([
-            sequelize.models.Inscripcion.update(
-              { asignaturaId: nuevaClave },
-              { where: { asignaturaId: clave }, transaction }
-            ),
-            sequelize.models.Contrato.update(
-              { asignaturaId: nuevaClave },
-              { where: { asignaturaId: clave }, transaction }
-            )
-          ]);
-  
-          await asignatura.update({ clave: nuevaClave }, { transaction });
-        } finally {
-          await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction });
-        }
-      }
-  
-      await asignatura.update({
-        nombre,
-        creditos
-      }, { transaction });
-  
-      await transaction.commit();
-      
-      const resultado = await Asignatura.findByPk(nuevaClave, {
-        include: [
-          {
-            model: Docente,
-            as: 'docentes',
-            through: { attributes: [] }
-          },
-          {
-            model: Estudiante,
-            as: 'estudiantes',
-            through: { attributes: [] }
-          }
-        ]
-      });
-  
-      return res.json({
-        success: true,
-        mensaje: 'Asignatura actualizada exitosamente',
-        data: resultado
-      });
-  
-    } catch (error) {
-      await transaction.rollback();
-      console.error('Error al actualizar asignatura:', error);
-      
-      return res.status(500).json({ 
-        error: 'Error interno del servidor',
-        mensaje: 'Ocurrió un error al procesar la solicitud',
-        detalle: process.env.NODE_ENV === 'development' ? {
-          message: error.message,
-          stack: error.stack
-        } : undefined,
-        sugerencia: 'Intente nuevamente o contacte al administrador'
-      });
-    }
-  },
+async actualizarAsignaturaPUT(req, res) {
+  const transaction = await sequelize.transaction();
+  try {
+    const { clave } = req.params;
+    const { nuevaClave, nombre, creditos } = req.body;
 
-  async modificarAsignaturaPATCH(req, res) {
-    const transaction = await sequelize.transaction();
-    try {
-      const { clave } = req.params;
-      const { nuevaClave, nombre, creditos } = req.body;
-  
-      const asignatura = await Asignatura.findOne({ 
-        where: { clave },
-        transaction
-      });
-  
-      if (!asignatura) {
-        await transaction.rollback();
-        return res.status(404).json({ error: 'Asignatura no encontrada' });
-      }
-  
-      if (nuevaClave && nuevaClave !== clave) {
-        const existe = await Asignatura.findOne({ 
-          where: { clave: nuevaClave },
-          transaction
-        });
-        
-        if (existe) {
-          await transaction.rollback();
-          return res.status(409).json({ error: 'La nueva clave ya está en uso' });
-        }
-  
-        await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction });
-  
-        try {
-          await Promise.all([
-            sequelize.models.Inscripcion.update(
-              { asignaturaId: nuevaClave },
-              { where: { asignaturaId: clave }, transaction }
-            ),
-            sequelize.models.Contrato.update(
-              { asignaturaId: nuevaClave },
-              { where: { asignaturaId: clave }, transaction }
-            )
-          ]);
-  
-          await asignatura.update({ clave: nuevaClave }, { transaction });
-  
-        } finally {
-          await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction });
-        }
-      }
-  
-      const updates = {};
-      if (nombre !== undefined) updates.nombre = nombre;
-      if (creditos !== undefined) updates.creditos = creditos;
-  
-      if (Object.keys(updates).length > 0) {
-        await asignatura.update(updates, { transaction });
-      }
-  
-      await transaction.commit();
-      
-      const claveActual = nuevaClave || clave;
-      const resultado = await Asignatura.findByPk(claveActual, {
-        include: [
-          {
-            model: Docente,
-            as: 'docentes',
-            through: { attributes: [] }
-          },
-          {
-            model: Estudiante,
-            as: 'estudiantes',
-            through: { attributes: [] }
-          }
-        ]
-      });
-  
-      res.json(resultado);
-    } catch (error) {
+    if (!nuevaClave || !nombre || creditos === undefined) {
       await transaction.rollback();
-      console.error('Error:', error);
-      res.status(500).json({ 
-        error: 'Error al actualizar asignatura',
-        detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+      const camposFaltantes = [];
+      if (!nuevaClave) camposFaltantes.push('nuevaClave');
+      if (!nombre) camposFaltantes.push('nombre');
+      if (creditos === undefined) camposFaltantes.push('creditos');
+
+      return res.status(400).json({ 
+        error: 'Faltan parámetros requeridos',
+        mensaje: `Para actualización completa (PUT) deben proporcionarse todos los campos obligatorios.`,
+        camposFaltantes,
+        camposRequeridos: ['nuevaClave', 'nombre', 'creditos'],
+        ejemplo: {
+          nuevaClave: "NuevoValorClave",
+          nombre: "Nuevo nombre de asignatura",
+          creditos: 4
+        }
       });
     }
-  },
-  
-  async eliminarAsignatura(req, res) {
-    const transaction = await sequelize.transaction();
-    try {
-      const { clave } = req.params;
-  
-      const asignatura = await Asignatura.findOne({
-        where: { clave },
+
+    const asignatura = await Asignatura.findOne({ 
+      where: { clave },
+      transaction
+    });
+
+    if (!asignatura) {
+      await transaction.rollback();
+      return res.status(404).json({ 
+        error: 'Recurso no encontrado',
+        mensaje: `No se encontró ninguna asignatura con la clave ${clave}`,
+        sugerencia: 'Verifique la clave e intente nuevamente'
+      });
+    }
+
+    if (Number(nuevaClave) !== Number(clave)) {
+      const existe = await Asignatura.findOne({ 
+        where: { clave: nuevaClave },
         transaction
       });
-  
-      if (!asignatura) {
+
+      if (existe) {
         await transaction.rollback();
-        return res.status(404).json({
-          status: 'error',
-          error: 'Recurso no encontrado',
-          mensaje: `No existe ninguna asignatura con la clave ${clave}`,
-          sugerencia: 'Verifique el parámetro clave e intente nuevamente'
-        });
-      }
-  
-      const [docentesCount, estudiantesCount] = await Promise.all([
-        sequelize.models.Contrato.count({
-          where: { asignaturaId: clave },
-          transaction
-        }),
-        sequelize.models.Inscripcion.count({
-          where: { asignaturaId: clave },
-          transaction
-        })
-      ]);
-  
-      if (docentesCount > 0 || estudiantesCount > 0) {
-        await transaction.rollback();
-        return res.status(409).json({
-          status: 'error',
-          error: 'Conflictos de dependencia',
-          mensaje: 'No se puede eliminar la asignatura porque tiene relaciones activas',
-          detalles: {
-            docentesAsociados: docentesCount,
-            estudiantesInscritos: estudiantesCount
+        return res.status(409).json({ 
+          error: 'Conflicto de claves',
+          mensaje: `Ya existe una asignatura con la clave ${nuevaClave}`,
+          asignaturaExistente: {
+            clave: existe.clave,
+            nombre: existe.nombre,
+            creditos: existe.creditos
           },
-          opciones: [
-            'Elimine primero todas las inscripciones y contratos asociados',
-            'Cambie el onDelete a CASCADE en las relaciones si desea eliminación automática'
-          ]
+          sugerencia: 'Proporcione una clave única para la asignatura'
         });
       }
-  
-      await asignatura.destroy({ transaction });
-      await transaction.commit();
-  
-      return res.json({
-        status: 'success',
-        mensaje: `Asignatura "${asignatura.nombre}" eliminada correctamente`,
-        data: {
-          clave: asignatura.clave,
-          nombre: asignatura.nombre
+
+      await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction });
+
+      try {
+        await Promise.all([
+          sequelize.models.Inscripcion.update(
+            { asignaturaId: nuevaClave },
+            { where: { asignaturaId: clave }, transaction }
+          ),
+          sequelize.models.Contrato.update(
+            { asignaturaId: nuevaClave },
+            { where: { asignaturaId: clave }, transaction }
+          )
+        ]);
+
+        await asignatura.update({ clave: nuevaClave }, { transaction });
+      } finally {
+        await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction });
+      }
+    }
+
+    await asignatura.update({ nombre, creditos }, { transaction });
+
+    await transaction.commit();
+
+    const resultado = await Asignatura.findByPk(nuevaClave, {
+      include: [
+        {
+          model: Docente,
+          as: 'docentes',
+          through: { attributes: [] }
+        },
+        {
+          model: Estudiante,
+          as: 'estudiantes',
+          through: { attributes: [] }
         }
-      });
-  
-    } catch (error) {
+      ]
+    });
+
+    return res.json({
+      success: true,
+      mensaje: 'Asignatura actualizada exitosamente',
+      data: resultado
+    });
+
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error al actualizar asignatura:', error);
+
+    return res.status(500).json({ 
+      error: 'Error interno del servidor',
+      mensaje: 'Ocurrió un error al procesar la solicitud',
+      detalle: process.env.NODE_ENV === 'development' ? {
+        message: error.message,
+        stack: error.stack
+      } : undefined,
+      sugerencia: 'Intente nuevamente o contacte al administrador'
+    });
+  }
+},
+
+ async modificarAsignaturaPATCH(req, res) {
+  const transaction = await sequelize.transaction();
+  try {
+    const { clave } = req.params;
+    const { nuevaClave, nombre, creditos } = req.body;
+
+    const asignatura = await Asignatura.findOne({ 
+      where: { clave },
+      transaction
+    });
+
+    if (!asignatura) {
       await transaction.rollback();
-      console.error('Error al eliminar asignatura:', error);
+      return res.status(404).json({ error: 'Asignatura no encontrada' });
+    }
+
+    if (nuevaClave && nuevaClave !== clave) {
+      const existe = await Asignatura.findOne({ 
+        where: { clave: nuevaClave },
+        transaction
+      });
       
-      return res.status(500).json({
+     
+
+      await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction });
+
+      try {
+        await Promise.all([
+          sequelize.models.Inscripcion.update(
+            { asignaturaId: nuevaClave },
+            { where: { asignaturaId: clave }, transaction }
+          ),
+          sequelize.models.Contrato.update(
+            { asignaturaId: nuevaClave },
+            { where: { asignaturaId: clave }, transaction }
+          )
+        ]);
+
+        await asignatura.update({ clave: nuevaClave }, { transaction });
+
+      } finally {
+        await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction });
+      }
+    }
+
+    const updates = {};
+    if (nombre !== undefined) updates.nombre = nombre;
+    if (creditos !== undefined) updates.creditos = creditos;
+
+    if (Object.keys(updates).length > 0) {
+      await asignatura.update(updates, { transaction });
+    }
+
+    await transaction.commit();
+
+    const claveActual = nuevaClave || clave;
+    const resultado = await Asignatura.findByPk(claveActual, {
+      include: [
+        {
+          model: Docente,
+          as: 'docentes',
+          through: { attributes: [] }
+        },
+        {
+          model: Estudiante,
+          as: 'estudiantes',
+          through: { attributes: [] }
+        }
+      ]
+    });
+
+    res.json(resultado);
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error:', error);
+    res.status(500).json({ 
+      error: 'Error al actualizar asignatura',
+      detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+}
+,
+  
+ async eliminarAsignatura(req, res) {
+  const transaction = await sequelize.transaction();
+  try {
+    const { clave } = req.params;
+
+    const asignatura = await Asignatura.findOne({
+      where: { clave },
+      transaction
+    });
+
+    if (!asignatura) {
+      await transaction.rollback();
+      return res.status(404).json({
         status: 'error',
-        error: 'Error de servidor',
-        mensaje: 'Ocurrió un error al procesar la solicitud',
-        detalle: process.env.NODE_ENV === 'development' ? {
-          message: error.message,
-          stack: error.stack
-        } : undefined,
-        sugerencia: 'Intente nuevamente o contacte al administrador del sistema'
+        error: 'Recurso no encontrado',
+        mensaje: `No existe ninguna asignatura con la clave ${clave}`,
+        sugerencia: 'Verifique el parámetro clave e intente nuevamente'
       });
     }
-  },
+
+    await asignatura.destroy({ transaction });
+    await transaction.commit();
+
+    return res.json({
+      status: 'success',
+      mensaje: `Asignatura "${asignatura.nombre}" eliminada correctamente`,
+      data: {
+        clave: asignatura.clave,
+        nombre: asignatura.nombre
+      }
+    });
+
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error al eliminar asignatura:', error);
+
+    return res.status(500).json({
+      status: 'error',
+      error: 'Error de servidor',
+      mensaje: 'Ocurrió un error al procesar la solicitud',
+      detalle: process.env.NODE_ENV === 'development' ? {
+        message: error.message,
+        stack: error.stack
+      } : undefined,
+      sugerencia: 'Intente nuevamente o contacte al administrador del sistema'
+    });
+  }
+}
+,
 
   async asignarDocente(req, res) {
     const transaction = await sequelize.transaction();

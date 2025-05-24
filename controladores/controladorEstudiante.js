@@ -151,16 +151,17 @@ module.exports = {
 async actualizarEstudiantePUT(req, res) {
   const transaction = await sequelize.transaction();
   try {
-    const matriculaActual = req.params.matricula; 
-    const { matricula: nuevaMatricula } = req.body; 
+    const matriculaActual = req.params.matricula;
+    const { matricula: nuevaMatricula, nombre, email } = req.body;
 
-    if (!nuevaMatricula) {
+    if (!nombre || !email) {
       await transaction.rollback();
-      return res.status(400).json({ error: 'La matrícula es obligatoria en el body' });
+      return res.status(400).json({ error: 'El nombre y el email son obligatorios' });
     }
 
-    const estudiante = await Estudiante.findOne({ 
+    const estudiante = await Estudiante.findOne({
       where: { matricula: matriculaActual },
+      include: [{ model: Persona, as: 'persona' }],
       transaction
     });
 
@@ -169,7 +170,7 @@ async actualizarEstudiantePUT(req, res) {
       return res.status(404).json({ error: 'Estudiante no encontrado' });
     }
 
-    if (nuevaMatricula !== matriculaActual) {
+    if (nuevaMatricula && nuevaMatricula !== matriculaActual) {
       const existeMatricula = await Estudiante.findOne({
         where: { matricula: nuevaMatricula },
         transaction
@@ -188,32 +189,44 @@ async actualizarEstudiantePUT(req, res) {
       await estudiante.update({ matricula: nuevaMatricula }, { transaction });
     }
 
+    await estudiante.persona.update({ nombre, email }, { transaction });
+
     await transaction.commit();
-    res.json({ 
+
+    const matriculaFinal = nuevaMatricula || matriculaActual;
+
+    const estudianteActualizado = await Estudiante.findOne({
+      where: { matricula: matriculaFinal },
+      include: [{ model: Persona, as: 'persona' }]
+    });
+
+    res.json({
       mensaje: 'Estudiante actualizado correctamente',
-      estudiante: await Estudiante.findOne({
-        where: { matricula: nuevaMatricula },
-        include: [{ model: Persona, as: 'persona' }]
-      })
+      estudiante: {
+        matricula: estudianteActualizado.matricula,
+        nombre: estudianteActualizado.persona?.nombre,
+        email: estudianteActualizado.persona?.email
+      }
     });
   } catch (error) {
     await transaction.rollback();
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Error al actualizar el estudiante',
       detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-},
-
+}
+,
 async actualizarEstudiantePATCH(req, res) {
   const transaction = await sequelize.transaction();
   try {
     const { matricula } = req.params; 
-    const { nuevaMatricula } = req.body; 
+    const { nuevaMatricula, nombre, email } = req.body;
 
     const estudiante = await Estudiante.findOne({ 
       where: { matricula },
+      include: [{ model: Persona, as: 'persona' }], 
       transaction
     });
 
@@ -237,25 +250,43 @@ async actualizarEstudiantePATCH(req, res) {
         { matricula: nuevaMatricula },
         { where: { matricula }, transaction }
       );
+    }
 
-      await estudiante.update({ matricula: nuevaMatricula }, { transaction });
+    const camposAActualizar = {};
+    if (nuevaMatricula && nuevaMatricula !== matricula) camposAActualizar.matricula = nuevaMatricula;
+
+    if (nombre) {
+      await estudiante.persona.update({ nombre }, { transaction });
+    }
+
+    if (email) {
+      await estudiante.persona.update({ email }, { transaction });
+    }
+
+    if (Object.keys(camposAActualizar).length > 0) {
+      await estudiante.update(camposAActualizar, { transaction });
     }
 
     await transaction.commit();
+
+    const estudianteActualizado = await Estudiante.findOne({
+      where: { matricula: nuevaMatricula || matricula },
+      include: [{ model: Persona, as: 'persona' }]
+    });
+
     res.json({ 
       mensaje: 'Estudiante actualizado correctamente',
-      estudiante: await Estudiante.findOne({
-        where: { matricula: nuevaMatricula || matricula },
-        include: [{ model: Persona, as: 'persona' }]
-      })
+      estudiante: estudianteActualizado
     });
+
   } catch (error) {
     await transaction.rollback();
     console.error(error);
     res.status(500).json({ error: 'Error al actualizar el estudiante' });
   }
-},
+}
 
+,
 async eliminarEstudiante(req, res) {
   const transaction = await sequelize.transaction();
   try {

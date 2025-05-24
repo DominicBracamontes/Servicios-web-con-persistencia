@@ -421,6 +421,62 @@ async obtenerContratoPorId(req, res) {
   } catch (error) {
     handleError(res, error, 'obtener contrato por ID');
   }
+},
+
+async obtenerContratosPorClave(req, res) {
+  try {
+    const { clave } = req.params;
+
+    if (!clave) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'La clave de asignatura es obligatoria'
+      });
+    }
+
+    const contratos = await Contrato.findAll({
+      where: { asignaturaId: clave },
+      attributes: ['docenteId'],
+      include: [
+        {
+          model: Docente,
+          as: 'docente', 
+          attributes: ['numEmpleado'],
+          include: [
+            {
+              model: Persona,
+              as: 'persona', 
+              attributes: ['nombre']
+            }
+          ]
+        }
+      ],
+      group: ['docenteId', 'docente.numEmpleado', 'docente.persona.nombre'],
+    });
+
+    if (!contratos.length) {
+      return res.status(404).json({
+        status: 'error',
+        message: `No se encontraron docentes asociados a la asignatura con clave ${clave}`
+      });
+    }
+
+    const docentes = contratos.map(c => ({
+      docenteId: c.docenteId,
+      numEmpleado: c.docente.numEmpleado,
+      nombre: c.docente.persona.nombre
+    }));
+
+    res.json({
+      status: 'success',
+      data: docentes
+    });
+
+  } catch (error) {
+    handleError(res, error, 'obtener contratos por clave');
+  }
 }
+
+
 
 };

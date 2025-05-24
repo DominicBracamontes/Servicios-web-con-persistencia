@@ -3,18 +3,26 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     const personas = await queryInterface.sequelize.query(
-      `SELECT id FROM Personas WHERE email IN (?, ?) ORDER BY CASE 
-        WHEN email = 'juan@example.com' THEN 1 
-        WHEN email = 'carlos@example.com' THEN 2 
+      `SELECT id, email FROM Personas WHERE email IN (
+        'juan@example.com', 
+        'maria@example.com',
+        'carlos@example.com',
+        'ana.martinez@example.com',
+        'luis.rod@example.com'
+      ) ORDER BY CASE
+        WHEN email = 'juan@example.com' THEN 1
+        WHEN email = 'maria@example.com' THEN 2
+        WHEN email = 'carlos@example.com' THEN 3
+        WHEN email = 'ana.martinez@example.com' THEN 4
+        WHEN email = 'luis.rod@example.com' THEN 5
         END`,
       {
-        replacements: ['juan@example.com', 'carlos@example.com'],
         type: queryInterface.sequelize.QueryTypes.SELECT
       }
     );
 
-    if (personas.length < 2) {
-      throw new Error('Faltan las personas requeridas (Juan y Carlos)');
+    if (personas.length < 5) {
+      throw new Error('Faltan algunas de las personas requeridas (deben ser 5)');
     }
 
     await queryInterface.bulkInsert('Estudiantes', [
@@ -27,6 +35,24 @@ module.exports = {
       { 
         matricula: 1002,
         personaId: personas[1].id,  
+        createdAt: new Date(), 
+        updatedAt: new Date() 
+      },
+      { 
+        matricula: 1003,
+        personaId: personas[2].id,  
+        createdAt: new Date(), 
+        updatedAt: new Date() 
+      },
+      { 
+        matricula: 1004,
+        personaId: personas[3].id,  
+        createdAt: new Date(), 
+        updatedAt: new Date() 
+      },
+      { 
+        matricula: 1005,
+        personaId: personas[4].id, 
         createdAt: new Date(), 
         updatedAt: new Date() 
       }

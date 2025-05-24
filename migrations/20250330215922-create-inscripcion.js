@@ -23,10 +23,11 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Asignaturas',
-          key: 'clave', 
-          onDelete: 'RESTRICT',
+          key: 'clave',
+          
+        },
+        onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
-        }
       },
       semestre: {
         type: Sequelize.INTEGER,

@@ -18,38 +18,41 @@ module.exports = {
         }
       },
 
-  async obtenerCategoria(req, res) {
-    try {
-      const { clave } = req.params;
+      async obtenerCategoria(req, res) {
+        try {
+          const { clave } = req.params;
       
-      const categoria = await CategoriaEmpleado.findByPk(clave, {
-        include: [{
-          model: Docente,
-          as: 'docentes',
-          attributes: ['numEmpleado'],
-          include: [{
-            association: 'persona',
-            attributes: ['nombre']
-          }]
-        }]
-      });
+          const categoria = await CategoriaEmpleado.findOne({
+            where: { clave },  
+            include: [{
+              model: Docente,
+              as: 'docentes',
+              attributes: ['numEmpleado'],
+              include: [{
+                association: 'persona',
+                attributes: ['nombre']
+              }]
+            }]
+          });
+      
+          if (!categoria) {
+            return res.status(404).json({ 
+              error: 'Categoría no encontrada',
+              claveSolicitada: clave
+            });
+          }
+      
+          res.json(categoria);
+        } catch (error) {
+          console.error('Error al obtener categoría:', error);
+          res.status(500).json({ 
+            error: 'Error al obtener categoría',
+            detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+          });
+        }
+      },
+      
 
-      if (!categoria) {
-        return res.status(404).json({ 
-          error: 'Categoría no encontrada',
-          claveSolicitada: clave
-        });
-      }
-
-      res.json(categoria);
-    } catch (error) {
-      console.error('Error al obtener categoría:', error);
-      res.status(500).json({ 
-        error: 'Error al obtener categoría',
-        detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
-    }
-  },
 
   async crearCategoria(req, res) {
     const transaction = await sequelize.transaction();

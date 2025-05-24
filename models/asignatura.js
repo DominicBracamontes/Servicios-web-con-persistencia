@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'estudianteId',
         as: 'estudiantes',
         onUpdate: 'CASCADE',  
-        onDelete: 'RESTRICT'
+        onDelete: 'CASCADE'
       });
       
       this.belongsToMany(models.Docente, {
@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'docenteId',
         as: 'docentes',
         onUpdate: 'CASCADE',  
-        onDelete: 'RESTRICT'
+        onDelete: 'CASCADE'
       });
     }
   }

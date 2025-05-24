@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
 
       Docente.hasMany(models.Contrato, {
         foreignKey: 'docenteId',
-        as: 'contratos',
+        as: 'contratos'
       });
       
       this.belongsTo(models.CategoriaEmpleado, {
@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
         through: 'Contratos',
         foreignKey: 'docenteId',  
         otherKey: 'asignaturaId',
-        as: 'asignaturas',
+        as: 'asignaturas'
       });
     }
   }

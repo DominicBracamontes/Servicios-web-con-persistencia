@@ -1,0 +1,73 @@
+const express = require('express');
+const https = require('https');
+const fs = require('fs');
+const cors = require('cors');
+const app = express();
+
+// Configuración de certificados
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem'),
+  minVersion: 'TLSv1.2' // Mejora seguridad SSL
+};
+
+const server = https.createServer(options, app);
+
+// Configuración mejorada de CORS
+app.use(cors({
+  origin: ['https://localhost:5173', 'http://localhost:5173'], // Permitir frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Middlewares adicionales
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Para formularios URL-encoded
+
+// Importar rutas
+const estudianteRouter = require('./routes/estudianteindex');
+const personaRoutes = require('./routes/personaindex');
+const docenteRoutes = require('./routes/docenteindex');
+const asignaturaRoutes = require('./routes/asignaturaindex');
+const categoriaEmpleadoRoutes = require('./routes/categoriaEmpleadoindex');
+const contratoRoutes = require('./routes/contratoindex');
+const inscripcionesRoutes = require('./routes/inscripcionindex');
+
+// Rutas
+app.use('/estudiantes', estudianteRouter);
+app.use('/personas', personaRoutes);
+app.use('/docentes', docenteRoutes);
+app.use('/asignaturas', asignaturaRoutes);
+app.use('/categoriaEmpleados', categoriaEmpleadoRoutes);
+app.use('/contratos', contratoRoutes);
+app.use('/inscripciones', inscripcionesRoutes);
+
+// Ruta de verificación de salud
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
+
+// Manejo de errores 404
+app.use((req, res, next) => {
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
+// Manejo centralizado de errores
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Error interno del servidor' });
+});
+
+const PORT = 3000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(` Servidor HTTPS corriendo en https://localhost:${PORT}`);
+
+});
+
+// Manejo de cierre elegante
+process.on('SIGINT', () => {
+  server.close(() => {
+    console.log('\n Servidor cerrado correctamente');
+    process.exit(0);
+  });
+});

@@ -26,7 +26,7 @@ module.exports = {
           model: 'Asignaturas',
           key: 'clave'
         },
-        onDelete: 'RESTRICT', 
+        onDelete: 'CASCADE', 
         onUpdate: 'CASCADE' 
       },
 

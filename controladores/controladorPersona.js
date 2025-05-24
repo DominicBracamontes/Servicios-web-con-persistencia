@@ -20,25 +20,34 @@ module.exports = {
     }
   },
 
-  async obtenerPersona(req, res) {
+  async obtenerPersonaPorNombre(req, res) {
     try {
-      const persona = await Persona.findByPk(req.params.id, {
+      const { nombre } = req.params; 
+      
+      if (!nombre) {
+        return res.status(400).json({ error: 'El nombre es requerido en la URL (ej: /personas/nombre/Juan-Perez)' });
+      }
+
+      const nombreBD = nombre.replace(/-/g, ' '); 
+
+      const persona = await Persona.findOne({
+        where: { nombre: nombreBD }, 
         include: [
           { model: Estudiante, as: 'estudiante' },
           { model: Docente, as: 'docente' }
         ],
-        paranoid: req.query.paranoid === 'false'
+        paranoid: req.query.paranoid === 'false' 
       });
 
       if (!persona) {
-        return res.status(404).json({ error: 'Persona no encontrada' });
+        return res.status(404).json({ error: `No se encontró a "${nombreBD}"` });
       }
 
       res.json(persona);
     } catch (error) {
-      console.error('Error en obtenerPersona:', error);
+      console.error('Error en obtenerPersonaPorNombre:', error);
       res.status(500).json({ 
-        error: 'Error al obtener persona',
+        error: 'Error al buscar la persona',
         details: process.env.NODE_ENV === 'development' ? error.message : null
       });
     }
@@ -72,9 +81,12 @@ module.exports = {
     }
   },
 
-  async actualizarPersona(req, res) {
+  async actualizarPersonaPorNombre(req, res) {
     try {
-      const persona = await Persona.findByPk(req.params.id);
+      const { nombre: nombreUrl } = req.params; 
+      const nombreBD = nombreUrl.replace(/-/g, ' '); 
+
+      const persona = await Persona.findOne({ where: { nombre: nombreBD } });
       
       if (!persona) {
         return res.status(404).json({ error: 'Persona no encontrada' });
@@ -100,7 +112,7 @@ module.exports = {
       await persona.update({ nombre, email });
       res.json(persona);
     } catch (error) {
-      console.error('Error en actualizarPersona:', error);
+      console.error('Error en actualizarPersonaPorNombre:', error);
       res.status(500).json({ 
         error: 'Error al actualizar persona',
         details: process.env.NODE_ENV === 'development' ? error.message : null
@@ -108,9 +120,12 @@ module.exports = {
     }
   },
 
-  async modificarPersona(req, res) {
+  async modificarPersonaPorNombre(req, res) {
     try {
-      const persona = await Persona.findByPk(req.params.id);
+      const { nombre: nombreUrl } = req.params;
+      const nombreBD = nombreUrl.replace(/-/g, ' '); 
+
+      const persona = await Persona.findOne({ where: { nombre: nombreBD } });
       
       if (!persona) {
         return res.status(404).json({ error: 'Persona no encontrada' });
@@ -147,7 +162,7 @@ module.exports = {
       await persona.update(updates);
       res.json(persona);
     } catch (error) {
-      console.error('Error en modificarPersona:', error);
+      console.error('Error en modificarPersonaPorNombre:', error);
       res.status(500).json({ 
         error: 'Error al modificar persona',
         details: process.env.NODE_ENV === 'development' ? error.message : null
@@ -155,7 +170,7 @@ module.exports = {
     }
   },
 
-  async eliminarPersona(req, res) {
+  async eliminarPersonaPorNombre(req, res) {
     if (!sequelize) {
         console.error('Error: sequelize no está definido');
         return res.status(500).json({ 
@@ -166,9 +181,11 @@ module.exports = {
 
     const transaction = await sequelize.transaction();
     try {
-        const { id } = req.params;
+        const { nombre: nombreUrl } = req.params;
+        const nombreBD = nombreUrl.replace(/-/g, ' '); 
 
-        const persona = await Persona.findByPk(id, {
+        const persona = await Persona.findOne({
+            where: { nombre: nombreBD },
             include: [
                 { model: Estudiante, as: 'estudiante' },
                 { model: Docente, as: 'docente' }
@@ -206,7 +223,7 @@ module.exports = {
         return res.json({ 
             mensaje: 'Persona y relaciones eliminadas permanentemente',
             eliminado: {
-                personaId: persona.id,
+                nombre: persona.nombre,
                 estudianteEliminado: !!persona.estudiante,
                 docenteEliminado: !!persona.docente
             }
@@ -214,7 +231,7 @@ module.exports = {
 
     } catch (error) {
         await transaction.rollback();
-        console.error('Error en eliminarPersona:', error);
+        console.error('Error en eliminarPersonaPorNombre:', error);
         
         return res.status(500).json({ 
             error: 'Error al eliminar persona',
@@ -222,7 +239,6 @@ module.exports = {
         });
     }
 },
-
   async restaurarPersona(req, res) {
     try {
       const persona = await Persona.findOne({
