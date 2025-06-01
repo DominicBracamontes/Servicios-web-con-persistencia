@@ -246,7 +246,7 @@ const confirmPatch = async () => {
   try {
     patching.value = true;
 
-    const response = await fetch(`https://localhost:3000/inscripciones/${props.matricula}`, {
+    const response = await fetch(`https://localhost:9000/inscripciones/${props.matricula}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -298,7 +298,7 @@ const confirmEdit = async () => {
   try {
     editing.value = true;
 
-    const response = await fetch(`https://localhost:3000/inscripciones/${props.matricula}`, {
+    const response = await fetch(`https://localhost:9000/inscripciones/${props.matricula}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -340,7 +340,7 @@ const confirmEdit = async () => {
         calificacion: parseFloat(form.value.calificacion)
       };
   
-      const response = await fetch('https://localhost:3000/inscripciones', {
+      const response = await fetch('https://localhost:9000/inscripciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -372,7 +372,7 @@ const confirmEdit = async () => {
   
     try {
       deleting.value = true;
-      const response = await fetch(`https://localhost:3000/inscripciones/${props.matricula}`, {
+      const response = await fetch(`https://localhost:9000/inscripciones/${props.matricula}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -406,7 +406,7 @@ const confirmEdit = async () => {
       error.value = null;
       noDataMessage.value = 'Cargando asignaturas inscritas...';
   
-      const response = await fetch(`https://localhost:3000/inscripciones/estudiante/${matricula}`);
+      const response = await fetch(`https://localhost:9000/inscripciones/estudiante/${matricula}`);
   
       if (!response.ok) {
         throw new Error(response.status === 404

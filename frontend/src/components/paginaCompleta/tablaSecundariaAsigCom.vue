@@ -32,13 +32,7 @@
       </v-data-table-virtual>
     </div>
 
-    <v-alert
-      v-if="inscripcionesFiltradas.length === 0 && !error"
-      type="info"
-      class="mt-4"
-    >
-      {{ noDataMessage }}
-    </v-alert>
+    
 
     <!-- DELETE -->
     <v-dialog v-model="deleteDialog" persistent max-width="500">
@@ -91,7 +85,6 @@ const inscripciones = ref([]);
 const estudiantes = ref([]);
 const inscripcionesFiltradas = ref([]);
 const error = ref(null);
-const noDataMessage = ref('Ingrese un semestre para ver las inscripciones');
 
 const deleteDialog = ref(false);
 const inscripcionAEliminar = ref(null);
@@ -107,8 +100,8 @@ const headers = [
 const cargarInscripciones = async () => {
   try {
     const [inscRes, estRes] = await Promise.all([
-      fetch('https://localhost:3000/inscripciones'),
-      fetch('https://localhost:3000/estudiantes')
+      fetch('https://localhost:9000/inscripciones'),
+      fetch('https://localhost:9000/estudiantes')
     ]);
 
     const inscJson = await inscRes.json();
@@ -143,7 +136,6 @@ const filtrarInscripciones = () => {
     inscripcionesFiltradas.value = inscripciones.value.filter(
       insc => insc.asignaturaId === parseInt(props.clave)
     );
-    noDataMessage.value = 'Mostrando todos los registros de esta asignatura';
     return;
   }
 
@@ -155,10 +147,7 @@ const filtrarInscripciones = () => {
       insc.semestre === semestreNum
   );
 
-  noDataMessage.value =
-    inscripcionesFiltradas.value.length === 0
-      ? 'No hay inscripciones para la clave y semestre proporcionados'
-      : '';
+ 
 };
 
 const abrirDialogoEliminacion = (item) => {
@@ -173,7 +162,7 @@ const confirmarEliminacion = async () => {
 
   try {
     const res = await fetch(
-      `https://localhost:3000/inscripciones/${inscripcionAEliminar.value.matricula}`,
+      `https://localhost:9000/inscripciones/${inscripcionAEliminar.value.matricula}`,
       {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },

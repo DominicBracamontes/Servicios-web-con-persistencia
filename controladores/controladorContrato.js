@@ -1,6 +1,6 @@
 const { Contrato, Docente, Asignatura, Persona, sequelize } = require('../models');
 
-const handleError = (res, error, operation = 'operación', statusCode = 500) => {
+const handleError = (res, error, operation = 'operacion', statusCode = 500) => {
   console.error(`Error al ${operation}:`, error);
   
   const response = {

@@ -301,7 +301,7 @@ async modificaDocentePATCH(req, res) {
 
         let numeroFinal = numEmpleado;
 
-        if (nuevoNumEmpleado && nuevoNumEmpleado !== numEmpleado) {
+        if (nuevoNumEmpleado != null && nuevoNumEmpleado !== '') {
             if (!/^\d+$/.test(nuevoNumEmpleado)) {
                 await transaction.rollback();
                 return res.status(400).json({
@@ -315,7 +315,8 @@ async modificaDocentePATCH(req, res) {
                 transaction
             });
 
-            if (existeNumero) {
+            // Solo hay conflicto si el número existe y pertenece a otro docente
+            if (existeNumero && existeNumero.numEmpleado !== numEmpleado) {
                 await transaction.rollback();
                 return res.status(409).json({
                     error: 'Número de empleado en uso',
@@ -323,6 +324,7 @@ async modificaDocentePATCH(req, res) {
                 });
             }
 
+            // Aunque sea el mismo número, se actualizará por consistencia
             await sequelize.query(
                 `UPDATE Docentes SET numEmpleado = ? WHERE numEmpleado = ?`,
                 {
@@ -353,11 +355,11 @@ async modificaDocentePATCH(req, res) {
             );
         }
 
-        if (persona) {
+        if (persona && Object.keys(persona).length > 0) {
             const updateData = {};
             if (persona.nombre) updateData.nombre = persona.nombre;
             if (persona.email) updateData.email = persona.email;
-            
+
             if (Object.keys(updateData).length > 0) {
                 await docente.persona.update(updateData, { transaction });
             }
@@ -377,9 +379,9 @@ async modificaDocentePATCH(req, res) {
             success: true,
             message: 'Docente actualizado exitosamente',
             cambios: {
-                ...(nuevoNumEmpleado && { numEmpleado: { anterior: numEmpleado, nuevo: nuevoNumEmpleado } }),
-                ...(categoriaId && { categoriaId }),
-                ...(persona && { persona: Object.keys(persona) })
+                ...(nuevoNumEmpleado ? { numEmpleado: { anterior: numEmpleado, nuevo: nuevoNumEmpleado } } : {}),
+                ...(categoriaId ? { categoriaId } : {}),
+                ...(persona && Object.keys(persona).length > 0 ? { persona: Object.keys(persona) } : {})
             },
             data: docenteActualizado
         });

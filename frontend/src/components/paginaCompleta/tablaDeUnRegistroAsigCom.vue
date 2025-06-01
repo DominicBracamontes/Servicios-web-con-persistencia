@@ -1,5 +1,13 @@
 <template>
   <div>
+
+     <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
+      {{ snackbar.message }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="snackbar.show = false"></v-btn>
+      </template>
+    </v-snackbar>
+
     <v-alert v-if="error" type="error" class="mb-4">
       {{ error }}
     </v-alert>
@@ -99,52 +107,52 @@
     </v-dialog>
 
     <!-- PUT -->
-    <v-dialog v-model="editDialog" persistent max-width="600">
-      <v-card>
-        <v-card-title class="text-h5">Editar Asignatura (PUT)</v-card-title>
-        <v-card-text>
-          <v-form ref="editForm" @submit.prevent="editarAsignatura">
-            <v-text-field
-              v-model="asignaturaAEditar.nombre"
-              label="Nombre"
-              :rules="[v => !!v || 'El nombre es requerido']"
-              required
-            ></v-text-field>
+<v-dialog v-model="editDialog" persistent max-width="600">
+  <v-card>
+    <v-card-title class="text-h5">Editar Asignatura (PUT)</v-card-title>
+    <v-card-text>
+      <v-form ref="editForm" @submit.prevent="editarAsignatura">
+        <v-text-field
+          v-model="asignaturaAEditar.nombre"
+          label="Nombre"
+          :rules="[v => !!v || 'El nombre es requerido']"
+          required
+        ></v-text-field>
 
-            <v-text-field
-              v-model="asignaturaAEditar.creditos"
-              label="Créditos"
-              type="number"
-              :rules="[v => !!v || 'Los créditos son requeridos']"
-              required
-            ></v-text-field>
+        <v-text-field
+          v-model="asignaturaAEditar.creditos"
+          label="Créditos"
+          type="number"
+          :rules="[v => !!v || 'Los créditos son requeridos']"
+          required
+        ></v-text-field>
 
-            <v-text-field
-              v-model="asignaturaAEditar.nuevaClave"
-              label="Nueva Clave"
-              type="number"
-              :rules="[v => !!v || 'La clave es requerida']"
-              required
-            ></v-text-field>
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="editDialog = false" :disabled="editing">
-            Cancelar
-          </v-btn>
-          <v-btn
-            color="green-darken-1"
-            variant="text"
-            @click="editarAsignatura"
-            :loading="editing"
-            :disabled="editing"
-          >
-            Guardar Cambios
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        <v-text-field
+          v-model="asignaturaAEditar.nuevaClave"
+          label="Nueva Clave"
+          type="number"
+          :rules="[v => !!v || 'La clave es requerida']"
+          required
+        ></v-text-field>
+      </v-form>
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn color="blue-darken-1" variant="text" @click="editDialog = false" :disabled="editing">
+        Cancelar
+      </v-btn>
+      <v-btn
+        color="green-darken-1"
+        variant="text"
+        @click="editarAsignatura"
+        :loading="editing"
+        :disabled="editing"
+      >
+        Guardar Cambios
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
     
     <!-- PATCH -->
     <v-dialog v-model="patchDialog" persistent max-width="600">
@@ -263,7 +271,7 @@ const fetchAsignatura = async (clave) => {
     error.value = null;
     noDataMessage.value = 'Cargando datos de la asignatura...';
 
-    const response = await fetch(`/api/asignaturas/${clave}`);
+    const response = await fetch(`https://localhost:9000/asignaturas/${clave}`);
 
     if (!response.ok) {
       throw new Error(
@@ -298,7 +306,7 @@ const confirmarEliminacion = async () => {
   deleting.value = true;
 
   try {
-    const response = await fetch(`/api/asignaturas/${asignaturaAEliminar.value.clave}`, {
+    const response = await fetch(`https://localhost:9000/asignaturas/${asignaturaAEliminar.value.clave}`, {
       method: 'DELETE'
     });
 
@@ -308,7 +316,9 @@ const confirmarEliminacion = async () => {
 
     asignaturaData.value = null;
     deleteDialog.value = false;
-    noDataMessage.value = 'Asignatura eliminada correctamente';
+    
+    // Redirigir a la página principal de asignaturas
+    window.location.href = '/paginaBuscarAsigCom'; // Ajusta la URL según tu estructura
     
   } catch (err) {
     error.value = err.message;
@@ -320,10 +330,10 @@ const confirmarEliminacion = async () => {
 //PUT
 const openEditDialog = (item) => {
   asignaturaAEditar.value = {
-    claveOriginal: item.clave,
-    nombre: item.nombre,
-    creditos: item.creditos,
-    nuevaClave: item.clave
+    claveOriginal: item.clave, // Solo mantenemos la clave original para la URL
+    nombre: '', // Vacío en lugar de item.nombre
+    creditos: null, // Null en lugar de item.creditos
+    nuevaClave: null // Null en lugar de item.clave
   };
   editDialog.value = true;
 };
@@ -337,7 +347,7 @@ const editarAsignatura = async () => {
   editing.value = true;
 
   try {
-    const response = await fetch(`/api/asignaturas/${asignaturaAEditar.value.claveOriginal}`, {
+    const response = await fetch(`https://localhost:9000/asignaturas/${asignaturaAEditar.value.claveOriginal}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -369,6 +379,19 @@ const editarAsignatura = async () => {
 };
 
 // PATCH
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'info'
+});
+
+const showSnackbar = (message, color = 'success') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color
+  };
+};
 const openPatchDialog = (item) => {
   asignaturaAPatch.value = {
     claveOriginal: item.clave,
@@ -379,41 +402,70 @@ const openPatchDialog = (item) => {
   patchDialog.value = true;
 };
 
+// Modifica la función aplicarPatch para verificar cambios
 const aplicarPatch = async () => {
   if (!patchForm.value) return;
   
   const { valid } = await patchForm.value.validate();
   if (!valid) return;
 
+  // Verificar si hay cambios
+  const cambios = {
+    nombre: asignaturaAPatch.value.nombre !== asignaturaData.value.nombre,
+    creditos: asignaturaAPatch.value.creditos !== asignaturaData.value.creditos,
+    clave: asignaturaAPatch.value.nuevaClave !== asignaturaData.value.clave
+  };
+
+  // Si no hay ningún cambio, mostrar snackbar y salir
+  if (!cambios.nombre && !cambios.creditos && !cambios.clave) {
+    showSnackbar('No hay cambios para actualizar', 'warning');
+    return;
+  }
+
   patching.value = true;
 
   try {
-    const response = await fetch(`/api/asignaturas/${asignaturaAPatch.value.claveOriginal}`, {
+    // Crear payload solo con los campos modificados
+    const payload = {};
+    
+    if (cambios.nombre) {
+      payload.nombre = asignaturaAPatch.value.nombre;
+    }
+    
+    if (cambios.creditos) {
+      payload.creditos = Number(asignaturaAPatch.value.creditos);
+    }
+    
+    if (cambios.clave) {
+      payload.nuevaClave = Number(asignaturaAPatch.value.nuevaClave);
+    }
+
+    const response = await fetch(`https://localhost:9000/asignaturas/${asignaturaAPatch.value.claveOriginal}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        nombre: asignaturaAPatch.value.nombre,
-        creditos: Number(asignaturaAPatch.value.creditos),
-        nuevaClave: Number(asignaturaAPatch.value.nuevaClave)
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
-      throw new Error('Error al modificar la asignatura');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Error al modificar la asignatura');
     }
 
+    // Actualizar los datos locales
     asignaturaData.value = {
-      clave: asignaturaAPatch.value.nuevaClave,
-      nombre: asignaturaAPatch.value.nombre,
-      creditos: asignaturaAPatch.value.creditos
+      clave: asignaturaAPatch.value.nuevaClave || asignaturaData.value.clave,
+      nombre: asignaturaAPatch.value.nombre || asignaturaData.value.nombre,
+      creditos: asignaturaAPatch.value.creditos || asignaturaData.value.creditos
     };
 
+    showSnackbar('Asignatura actualizada correctamente', 'success');
     patchDialog.value = false;
     
   } catch (err) {
     error.value = err.message;
+    showSnackbar(`Error: ${err.message}`, 'error');
   } finally {
     patching.value = false;
   }

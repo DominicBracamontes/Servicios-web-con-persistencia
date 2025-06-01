@@ -236,7 +236,7 @@ const fetchStudent = async (matricula) => {
     error.value = null;
     noDataMessage.value = 'Cargando datos del estudiante...';
     
-    const response = await fetch(`/api/estudiantes/${matricula}`);
+    const response = await fetch(`https://localhost:9000/estudiantes/${matricula}`);
     
     if (!response.ok) {
       throw new Error(response.status === 404 
@@ -306,7 +306,7 @@ const confirmEdit = async () => {
     };
 
     const response = await fetch(
-      `https://localhost:3000/estudiantes/por-matricula/${originalStudentData.value.matricula}`,
+      `https://localhost:9000/estudiantes/por-matricula/${originalStudentData.value.matricula}`,
       {
         method: 'PUT',
         headers: {
@@ -376,7 +376,7 @@ const confirmPatch = async () => {
     console.log('[DEBUG] Payload a enviar:', payload);
 
     const response = await fetch(
-      `https://localhost:3000/estudiantes/por-matricula/${originalStudentData.value.matricula}`,
+      `https://localhost:9000/estudiantes/por-matricula/${originalStudentData.value.matricula}`,
       {
         method: 'PATCH',
         headers: {
@@ -424,7 +424,7 @@ const openDeleteDialog = (student) => {
 const confirmDelete = async () => {
   try {
     deleting.value = true;
-    const response = await fetch(`/api/estudiantes/por-matricula/${studentToDelete.value.matricula}`, {
+    const response = await fetch(`https://localhost:9000/estudiantes/por-matricula/${studentToDelete.value.matricula}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

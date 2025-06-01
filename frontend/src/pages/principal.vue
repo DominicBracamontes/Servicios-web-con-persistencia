@@ -1,3 +1,4 @@
+<!-- 
 <template>
   <v-app>
     <AppBar />
@@ -111,4 +112,218 @@ export default {
     margin-top: 8px !important;
   }
 }
+</style> -->
+<!-- <template>
+  <v-app>
+    <v-main>
+      <v-container class="fill-height" fluid>
+        <v-row align="center" justify="center">
+          <v-col cols="12" sm="8" md="6" lg="4">
+            <v-card class="pa-6">
+              <v-card-title class="justify-center">
+                Inicio de Sesión
+              </v-card-title>
+              
+              <v-card-text>
+                <v-form @submit.prevent>
+                  <v-text-field
+                    v-model="usuario"
+                    label="Usuario"
+                    outlined
+                    dense
+                    required
+                    class="mb-4"
+                  ></v-text-field>
+                  
+                  <v-text-field
+                    v-model="contrasena"
+                    label="Contraseña"
+                    outlined
+                    dense
+                    required
+                    :type="mostrarContrasena ? 'text' : 'password'"
+                    :append-icon="mostrarContrasena ? 'mdi-eye-off' : 'mdi-eye'"
+                    @click:append="mostrarContrasena = !mostrarContrasena"
+                    class="mb-4"
+                  ></v-text-field>
+                  
+                  <v-btn
+                    color="primary"
+                    block
+                    large
+                    class="mb-4"
+                    type="submit"
+                  >
+                    Ingresar
+                  </v-btn>
+                  
+                  <v-divider class="my-4"></v-divider>
+                  
+                  <p class="text-center mb-4">O ingresa con</p>
+                  
+                  <v-btn
+                    color="red"
+                    block
+                    large
+                    @click="irAURL"
+                  >
+                    <v-icon left>mdi-google</v-icon>
+                    Google
+                  </v-btn>
+                </v-form>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
+  </v-app>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      usuario: '',
+      contrasena: '',
+      mostrarContrasena: false
+    }
+  },
+  methods: {
+    irAURL() {
+      window.location.href = 'https://localhost:9000/auth/google';
+    }
+  }
+}
+</script>
+
+<style>
+.fill-height {
+  min-height: 100vh;
+}
+</style> -->
+
+<template>
+  <v-app>
+    <v-main>
+      <v-container class="fill-height" fluid>
+        <v-row align="center" justify="center">
+          <v-col cols="12" sm="8" md="6" lg="4">
+            <v-card class="pa-6">
+              <v-card-title class="justify-center">
+                Inicio de Sesión
+              </v-card-title>
+              
+              <v-card-text>
+                <v-form @submit.prevent="iniciarSesion">
+                  <v-text-field
+                    v-model="usuario"
+                    label="Usuario"
+                    outlined
+                    dense
+                    required
+                    class="mb-4"
+                  ></v-text-field>
+                  
+                  <v-text-field
+                    v-model="contrasena"
+                    label="Contraseña"
+                    outlined
+                    dense
+                    required
+                    :type="mostrarContrasena ? 'text' : 'password'"
+                    :append-icon="mostrarContrasena ? 'mdi-eye-off' : 'mdi-eye'"
+                    @click:append="mostrarContrasena = !mostrarContrasena"
+                    class="mb-4"
+                  ></v-text-field>
+                  
+                  <v-btn
+                    color="primary"
+                    block
+                    large
+                    class="mb-4"
+                    type="submit"
+                  >
+                    Ingresar
+                  </v-btn>
+                  
+                  <v-divider class="my-4"></v-divider>
+                  
+                  <p class="text-center mb-4">O ingresa con</p>
+                  
+                  <v-btn
+                    color="red"
+                    block
+                    large
+                    @click="irAURL"
+                  >
+                    <v-icon left>mdi-google</v-icon>
+                    Google
+                  </v-btn>
+                </v-form>
+                
+                <v-alert v-if="error" type="error" class="mt-4">
+                  {{ error }}
+                </v-alert>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
+  </v-app>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      usuario: '',
+      contrasena: '',
+      mostrarContrasena: false,
+      error: ''
+    }
+  },
+  methods: {
+    irAURL() {
+      window.location.href = 'https://localhost:9000/auth/google';
+    },
+    async iniciarSesion() {
+      this.error = '';
+
+      try {
+        const res = await fetch('https://localhost:9000/usuarios/verificar', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            correo: this.usuario,
+            contrasena: this.contrasena
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          console.log('Login exitoso:', data);
+            localStorage.setItem('correoUsuario', data.correo || this.usuario);
+
+          this.$router.push('/home'); 
+        } else {
+          const errData = await res.json();
+          this.error = errData.error || 'Error al iniciar sesión';
+        }
+
+      } catch (err) {
+        console.error(err);
+        this.error = 'Error de conexión al servidor';
+      }
+    }
+  }
+}
+</script>
+
+<style>
+.fill-height {
+  min-height: 100vh;
+}
 </style>
+

@@ -14,7 +14,7 @@ export const useAsignaturaData = () => {
     try {
       loading.value = true
       error.value = null
-      const response = await fetch('https://localhost:3000/asignaturas')
+      const response = await fetch('https://localhost:9000/asignaturas')
       
       if (!response.ok) throw new Error('Error al cargar las asignaturas')
       

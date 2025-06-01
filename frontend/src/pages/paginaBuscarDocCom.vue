@@ -1,11 +1,11 @@
 <template>
   <v-app>
     <AppBar @toggle-drawer="drawer = !drawer" />
-    <AppDrawer v-model="drawer" />
-    <v-main>
-      <v-container fluid class="pa-4">
+        <AppDrawer v-model="drawer" />
+
+  <v-main :style="{'margin-left': drawer ? '0px' : '64px', 'transition': 'margin-left 0.3s ease'}">      <v-container fluid class="pa-4">
         <v-row class="align-center">
-          <v-col class="flex-grow-0 pr-2">
+          <!-- <v-col class="flex-grow-0 pr-2">
             <DropdownButton
               @edit-action="handleDocentesSelection"
               @delete-action="resetView"
@@ -13,7 +13,7 @@
               @update-placeholder="searchPlaceholder = $event"
               initial-selection="docentes"
             />
-          </v-col>
+          </v-col> -->
 
           <v-col md="3" class="d-flex justify-end">
             <BotonBuscar
@@ -54,7 +54,7 @@
           </v-btn>
 
           <v-row>
-            <v-col cols="12" md="7">
+            <v-col cols="12" md="8">
               <TablaDeUnRegistroDocCom 
                 :num-empleado="currentNumEmp"
                 class="mb-4"
@@ -64,7 +64,7 @@
               
             </v-col>
 
-            <v-col cols="12" md="5">
+            <v-col cols="12" md="4">
               <TablaTerciariaDoc 
                 :num-empleado="currentNumEmp"
               />
@@ -79,12 +79,12 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+const drawer = ref(true);
 
 import AppBar from '@/components/AppBar.vue';
 import AppDrawer from '@/components/drawer.vue';
 import DropdownButton from '@/components/paginaCompleta/dropDownButtonCom.vue';
 import TablaPrincipal from '@/components/paginaCompleta/tablaPrincipalDocCom.vue';
-import TablaSecundariaDoc from '@/components/paginaCompleta/TablaSecundariaDocCom.vue';
 import TablaTerciariaDoc from '@/components/paginaCompleta/tablaTerciariaDocCom.vue';
 import BotonBuscar from '@/components/paginaBuscar/botonBuscarEst.vue';
 import TablaDeUnRegistroDocCom from '@/components/paginaCompleta/tablaDeUnRegistroDocCom.vue';
@@ -98,7 +98,6 @@ const mostrarDetalles = ref(false);
 const currentNumEmp = ref('');
 
 const {
-  drawer,
   searchPlaceholder,
   filteredDocentes,
   handleDocentesSelection,
@@ -143,7 +142,17 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.v-btn {
-  margin-bottom: 20px;
+/* Estilos para asegurar visibilidad */
+.v-navigation-drawer {
+  z-index: 1000;
+}
+
+.v-main {
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+}
+
+.v-main--has-drawer {
+  margin-left: 256px; /* Ajusta según el ancho de tu drawer */
 }
 </style>

@@ -16,8 +16,6 @@
       hide-default-footer
       class="students-table"
     >
-
-    
       <!-- BOTONES -->
       <template v-slot:loading>
         <v-progress-linear indeterminate color="primary"></v-progress-linear>
@@ -49,8 +47,14 @@
           >
             mdi-delete
           </v-icon>
+          
         </div>
       </template>
+      <template v-slot:bottom>
+      <div class="text-caption text-right pa-2">
+        Mostrando {{ formattedStudents.length }} registros
+      </div>
+    </template>
     </v-data-table>
 
     <!-- DELETE-->
@@ -303,7 +307,7 @@ const fetchStudents = async () => {
     noDataMessage.value = 'Cargando estudiantes...';
     students.value = [];
     
-    const response = await fetch('https://localhost:3000/estudiantes');
+    const response = await fetch('https://localhost:9000/estudiantes');
     
     if (!response.ok) {
       throw new Error(response.status === 404 
@@ -337,7 +341,7 @@ const openDeleteDialog = (student) => {
 const confirmDelete = async () => {
   try {
     deleting.value = true;
-    const response = await fetch(`https://localhost:3000/estudiantes/por-matricula/${studentToDelete.value.matricula}`, {
+    const response = await fetch(`https://localhost:9000/estudiantes/por-matricula/${studentToDelete.value.matricula}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -423,7 +427,7 @@ const confirmEdit = async () => {
     }
 
     const response = await fetch(
-      `https://localhost:3000/estudiantes/por-matricula/${originalStudentData.value.matricula}`,
+      `https://localhost:9000/estudiantes/por-matricula/${originalStudentData.value.matricula}`,
       {
         method: 'PUT',
         headers: {
@@ -468,16 +472,17 @@ const confirmPatch = async () => {
 
   const payload = {};
 
-  if (patchStudent.value.nombre !== undefined && patchStudent.value.nombre !== originalStudentData.value.nombre) {
+  if (patchStudent.value.nombre && patchStudent.value.nombre !== originalStudentData.value.nombre) {
     payload.nombre = patchStudent.value.nombre;
   }
 
-  if (patchStudent.value.email !== undefined && patchStudent.value.email !== originalStudentData.value.email) {
+  if (patchStudent.value.email && patchStudent.value.email !== originalStudentData.value.email) {
     payload.email = patchStudent.value.email;
   }
 
-  if (patchStudent.value.matricula !== undefined && patchStudent.value.matricula !== originalStudentData.value.matricula) {
-    payload.nuevaMatricula = patchStudent.value.matricula; 
+  if (patchStudent.value.matricula && patchStudent.value.matricula !== originalStudentData.value.matricula) {
+    payload.nuevaMatricula = patchStudent.value.matricula;
+  }
 
   if (Object.keys(payload).length === 0) {
     showSnackbar('No hay cambios para actualizar', 'warning');
@@ -490,11 +495,12 @@ const confirmPatch = async () => {
     console.log('[DEBUG] Payload a enviar:', payload);
 
     const response = await fetch(
-      `https://localhost:3000/estudiantes/por-matricula/${originalStudentData.value.matricula}`,
+      `https://localhost:9000/estudiantes/por-matricula/${originalStudentData.value.matricula}`,
       {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
         body: JSON.stringify(payload)
       }
@@ -502,22 +508,12 @@ const confirmPatch = async () => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.message || 'Error al actualizar parcialmente';
-      console.error('[ERROR] Respuesta de error del servidor:', errorMessage);
-      throw new Error(errorMessage);
+      throw new Error(errorData.message || 'Error al actualizar parcialmente');
     }
 
-    const updatedData = await response.json(); 
-    console.log('[DEBUG] Respuesta del servidor:', updatedData);
-
-    if (updatedData.estudiante) {
-      showSnackbar('Estudiante actualizado correctamente', 'success');
-      await fetchStudents(); 
-      patchDialog.value = false;
-    } else {
-      console.error('[ERROR] No se recibieron los datos actualizados:', updatedData);
-      showSnackbar('Error al obtener los datos actualizados', 'error');
-    }
+    showSnackbar('Estudiante actualizado correctamente', 'success');
+    await fetchStudents();
+    patchDialog.value = false;
 
   } catch (error) {
     console.error('[ERROR PATCH]', error);
@@ -547,19 +543,21 @@ const confirmCreate = async () => {
   creating.value = true;
 
   try {
-    const response = await fetch('https://localhost:3000/estudiantes', {
+    const payload = {
+      matricula: newStudent.value.matricula,
+      persona: {
+        nombre: newStudent.value.nombre,
+        email: newStudent.value.email
+      }
+    };
+
+    const response = await fetch('https://localhost:9000/estudiantes', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
       },
-      body: JSON.stringify({
-        matricula: newStudent.value.matricula,
-        persona: {
-          nombre: newStudent.value.nombre,
-          email: newStudent.value.email
-        }
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -568,18 +566,19 @@ const confirmCreate = async () => {
     }
 
     const createdData = await response.json();
-    console.log('Estudiante creado:', createdData);
+    console.log('[DEBUG] Estudiante creado:', createdData);
 
-    showSnackbar('Estudiante creado correctamente', 'success');
-    await fetchStudents();
+    showSnackbar('Estudiante creado exitosamente', 'success');
+    await fetchStudents(); 
     createDialog.value = false;
   } catch (error) {
-    console.error('Error al crear estudiante:', error);
-    showSnackbar(`Error: ${error.message}`, 'error');
+    console.error('[ERROR CREATE]', error);
+    showSnackbar(`Error al crear: ${error.message}`, 'error');
   } finally {
     creating.value = false;
   }
 };
+
 
 fetchStudents();
 </script>

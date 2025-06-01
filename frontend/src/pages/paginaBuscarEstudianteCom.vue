@@ -5,7 +5,7 @@
     <v-main>
       <v-container fluid class="pa-4">
         <v-row class="align-center">
-          <v-col class="flex-grow-0 pr-2">
+          <!-- <v-col class="flex-grow-0 pr-2">
             <DropdownButton
               @edit-action="handleEstudiantesSelection"
               @delete-action="resetView"
@@ -13,7 +13,7 @@
               @update-placeholder="searchPlaceholder = $event"
               initial-selection="estudiantes"
             />
-          </v-col>
+          </v-col> -->
 
           <v-col md="3" class="d-flex justify-end">
             <BotonBuscar

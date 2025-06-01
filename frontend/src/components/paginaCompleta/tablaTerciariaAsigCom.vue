@@ -40,7 +40,7 @@ async function confirmarEliminacion() {
   error.value = null;
 
   try {
-    const response = await fetch(`https://localhost:3000/contratos/${contratoAEliminar.value.numEmpleado}`, {
+    const response = await fetch(`https://localhost:9000/contratos/${contratoAEliminar.value.numEmpleado}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
@@ -54,9 +54,9 @@ async function confirmarEliminacion() {
       throw new Error(`Error al eliminar contrato del empleado ${contratoAEliminar.value.numEmpleado}`);
     }
 
+    // Solución: Crear un nuevo array para forzar la reactividad
     docentesAsignatura.value = docentesAsignatura.value.filter(
-      (item) =>
-        !(item.numEmpleado === contratoAEliminar.value.numEmpleado && item.clave === props.clave)
+      item => item.numEmpleado !== contratoAEliminar.value.numEmpleado
     );
 
     deleteDialog.value = false;
@@ -84,7 +84,7 @@ async function confirmarAgregar() {
   error.value = null;
 
   try {
-    const response = await fetch('https://localhost:3000/contratos', {
+    const response = await fetch('https://localhost:9000/contratos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -123,7 +123,7 @@ const fetchDocentes = async (clave) => {
     error.value = null;
     noDataMessage.value = 'Cargando docentes...';
 
-    const response = await fetch(`https://localhost:3000/contratos/asignaturas/${clave}`);
+    const response = await fetch(`https://localhost:9000/contratos/asignaturas/${clave}`);
     if (!response.ok) {
       throw new Error(`Error al cargar docentes para la clave ${clave}`);
     }

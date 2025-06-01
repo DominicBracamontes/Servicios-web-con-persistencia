@@ -1,8 +1,21 @@
 <template>
   <div>
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
+  {{ snackbar.message }}
+  <template v-slot:actions>
+    <v-btn variant="text" @click="snackbar.show = false"></v-btn>
+  </template>
+</v-snackbar>
+    
     <v-alert v-if="error" type="error" class="mb-4">
       {{ error }}
     </v-alert>
+<div class="d-flex justify-end mb-4">
+      <v-btn color="primary" @click="nuevoDialogo = true">
+        <v-icon left>mdi-plus</v-icon>
+        Nuevo Docente
+      </v-btn>
+    </div>
 
 <!-- TABLA -->
 <template v-if="!loading && docentes.length > 0">
@@ -14,15 +27,6 @@
     fixed-header
     class="compact-table"
   >
-    <template v-slot:top>
-      <v-toolbar flat>
-        <v-toolbar-title>Docentes</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" @click="nuevoDialogo = true">
-          Agregar Docente
-        </v-btn>
-      </v-toolbar>
-    </template>
 
     <template v-slot:item.acciones="{ item }">
   <v-icon
@@ -169,47 +173,92 @@
   </v-card>
 </v-dialog>
 
-<!--  PATCH  -->
+<!--PATCH-->
 <v-dialog v-model="patchDialogo" persistent max-width="600">
   <v-card>
-    <v-card-title class="text-h6">Editar Docente</v-card-title>
+    <v-card-title class="text-h6">
+      <v-icon left>mdi-pencil</v-icon>
+      Editar Docente 
+    </v-card-title>
+    
+    
     <v-card-text>
-      <v-form ref="formPatchRef" lazy-validation>
+      <v-form ref="formPatchRef">
+        <!-- Número de Empleado -->
         <v-text-field 
           v-model="docenteAPatch.nuevoNumEmpleado" 
-          label="Número de Empleado" 
-          type="number" 
-          required
-        />
-        <v-text-field 
-          v-model="docenteAPatch.categoriaId" 
-          label="Categoría ID" 
-          type="number" 
-          required
-        />
+          label="Nuevo Número de Empleado"
+          type="number"
+          :placeholder="`Actual: ${docenteOriginal?.numEmpleado || ''}`"
+          clearable
+          class="mb-3"
+        >
+          <template v-slot:append>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-icon color="grey" v-on="on">mdi-information</v-icon>
+              </template>
+              <span>Dejar vacío para mantener el actual</span>
+            </v-tooltip>
+          </template>
+        </v-text-field>
+
+        <!-- Categoría -->
+        <v-autocomplete
+          v-model="docenteAPatch.categoriaId"
+          :items="categorias"
+          item-title="nombre"
+          item-value="clave"
+          label="Categoría"
+          :placeholder="`Actual: ${getCategoriaName(docenteOriginal?.categoriaId) || 'Sin categoría'}`"
+          clearable
+          class="mb-3"
+        >
+          <template v-slot:selection="{ item }">
+            {{ item.raw.nombre }}
+          </template>
+        </v-autocomplete>
+
+        <!-- Nombre -->
         <v-text-field 
           v-model="docenteAPatch.persona.nombre" 
-          label="Nombre" 
-          required
+          label="Nombre"
+          :placeholder="`Actual: ${docenteOriginal?.nombre || ''}`"
+          clearable
+          class="mb-3"
         />
+
+        <!-- Email -->
         <v-text-field 
           v-model="docenteAPatch.persona.email" 
-          label="Email" 
-          required
-          :rules="[v => /.+@.+\..+/.test(v) || 'Email debe ser válido']"
+          label="Email"
+          :placeholder="`Actual: ${docenteOriginal?.email || ''}`"
+          :rules="[v => !v || /.+@.+\..+/.test(v) || 'Email debe ser válido']"
+          clearable
         />
       </v-form>
+
+      
     </v-card-text>
+
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn variant="text" @click="patchDialogo = false">Cancelar</v-btn>
-      <v-btn color="primary" variant="text" @click="aplicarPatch" :loading="patchLoading">
+      <v-btn color="grey" variant="text" @click="patchDialogo = false">
+        Cancelar
+      </v-btn>
+      <v-btn 
+        color="primary" 
+        variant="flat" 
+        @click="aplicarPatch" 
+        :loading="patchLoading"
+        :disabled="patchLoading"
+      >
+        
         Guardar Cambios
       </v-btn>
     </v-card-actions>
   </v-card>
 </v-dialog>
-
   </div>
 </template>
 
@@ -261,21 +310,61 @@ const docenteAPatch = ref({
 });
 const numEmpleadoOriginalPatch = ref('');
 const formPatchRef = ref(null);
+const categorias = ref([]);
 
-const abrirDialogoPatch = (docente) => {
-  numEmpleadoOriginalPatch.value = docente.numEmpleado;
-  docenteAPatch.value = {
-    nuevoNumEmpleado: docente.numEmpleado,
-    categoriaId: docente.categoriaId || '',
-    persona: {
-      nombre: docente.nombre || '',
-      email: docente.email || ''
-    }
+const docenteOriginal = ref(null);
+// patch
+
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'warning' // Puede ser 'success', 'error', 'warning', 'info'
+});
+
+const showSnackbar = (message, color = 'success') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color
   };
-  patchDialogo.value = true;
 };
 
-// patch
+const abrirDialogoPatch = async (docente) => {
+  try {
+    await fetchCategorias();
+    
+    // Guardar datos originales
+    docenteOriginal.value = {
+      numEmpleado: docente.numEmpleado,
+      categoriaId: docente.categoriaId,
+      nombre: docente.nombre,
+      email: docente.email
+    };
+    
+    // Inicializar con valores actuales
+    docenteAPatch.value = {
+      nuevoNumEmpleado: docente.numEmpleado, // Mostrar valor actual
+      categoriaId: docente.categoriaId,      // Mostrar valor actual
+      persona: {
+        nombre: docente.nombre,              // Mostrar valor actual
+        email: docente.email                 // Mostrar valor actual
+      }
+    };
+    
+    numEmpleadoOriginalPatch.value = docente.numEmpleado;
+    patchDialogo.value = true;
+  } catch (err) {
+    error.value = err.message;
+    showSnackbar(`Error al abrir edición: ${err.message}`, 'error');
+  }
+};
+
+
+const getCategoriaName = (id) => {
+  const categoria = categorias.value.find(c => c.clave === id);
+  return categoria ? categoria.nombre : '';
+};
+
 const aplicarPatch = async () => {
   const { valid } = await formPatchRef.value.validate();
   if (!valid) return;
@@ -284,10 +373,49 @@ const aplicarPatch = async () => {
   error.value = null;
 
   try {
-    const res = await fetch(`https://localhost:3000/docentes/${numEmpleadoOriginalPatch.value}`, {
+    // Crear payload solo con los campos modificados
+    const payload = {};
+    
+    // Verificar cambios en número de empleado
+    if (docenteAPatch.value.nuevoNumEmpleado && 
+        docenteAPatch.value.nuevoNumEmpleado !== docenteOriginal.value.numEmpleado) {
+      payload.nuevoNumEmpleado = docenteAPatch.value.nuevoNumEmpleado;
+    }
+    
+    // Verificar cambios en categoría
+    if (docenteAPatch.value.categoriaId !== undefined && 
+        docenteAPatch.value.categoriaId !== docenteOriginal.value.categoriaId) {
+      payload.categoriaId = docenteAPatch.value.categoriaId;
+    }
+    
+    // Verificar cambios en datos de persona
+    const personaChanges = {};
+    if (docenteAPatch.value.persona.nombre && 
+        docenteAPatch.value.persona.nombre !== docenteOriginal.value.nombre) {
+      personaChanges.nombre = docenteAPatch.value.persona.nombre;
+    }
+    if (docenteAPatch.value.persona.email && 
+        docenteAPatch.value.persona.email !== docenteOriginal.value.email) {
+      personaChanges.email = docenteAPatch.value.persona.email;
+    }
+    
+    if (Object.keys(personaChanges).length > 0) {
+      payload.persona = personaChanges;
+    }
+    
+    if (Object.keys(payload).length === 0) {
+      showSnackbar('No shay cambios para actualizar', 'warning');
+      patchLoading.value = false;
+      return;
+    }
+
+    const res = await fetch(`https://localhost:9000/docentes/${numEmpleadoOriginalPatch.value}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(docenteAPatch.value)
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+      },
+      body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
@@ -295,10 +423,12 @@ const aplicarPatch = async () => {
       throw new Error(errorData.error || 'Error al actualizar docente');
     }
 
+    showSnackbar('Docente actualizado correctamente', 'success');
     patchDialogo.value = false;
     await fetchDocentes();
   } catch (err) {
     error.value = err.message;
+    showSnackbar(`Error: ${err.message}`, 'error');
   } finally {
     patchLoading.value = false;
   }
@@ -325,7 +455,7 @@ const actualizarDocente = async () => {
   error.value = null;
 
   try {
-    const res = await fetch(`https://localhost:3000/docentes/${numEmpleadoOriginal.value}`, {
+    const res = await fetch(`https://localhost:9000/docentes/${numEmpleadoOriginal.value}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(docenteAEditar.value)
@@ -355,7 +485,7 @@ const confirmarEliminacion = async () => {
   deleting.value = true;
 
   try {
-    const res = await fetch(`https://localhost:3000/docentes/${docenteAEliminar.value.numEmpleado}`, {
+    const res = await fetch(`https://localhost:9000/docentes/${docenteAEliminar.value.numEmpleado}`, {
       method: 'DELETE'
     });
 
@@ -388,7 +518,7 @@ const crearDocente = async () => {
   error.value = null;
 
   try {
-    const res = await fetch('https://localhost:3000/docentes', {
+    const res = await fetch('https://localhost:9000/docentes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevoDocente.value)
@@ -412,7 +542,7 @@ const crearDocente = async () => {
 
 const fetchCategoriaNombre = async (clave) => {
   try {
-    const res = await fetch(`https://localhost:3000/categoriaEmpleados/${clave}`);
+    const res = await fetch(`https://localhost:9000/categoriaEmpleados/${clave}`);
     if (!res.ok) throw new Error('Error al obtener categoría');
     const categoriaData = await res.json();
     return categoriaData.nombre || 'Sin nombre';
@@ -427,7 +557,7 @@ const fetchDocentes = async () => {
     error.value = null;
     docentes.value = [];
 
-    const response = await fetch('https://localhost:3000/docentes');
+    const response = await fetch('https://localhost:9000/docentes');
     if (!response.ok) throw new Error('Error al cargar docentes');
 
     const data = await response.json();
@@ -455,7 +585,19 @@ const fetchDocentes = async () => {
   }
 };
 
-onMounted(fetchDocentes);
+const fetchCategorias = async () => {
+  try {
+    const res = await fetch('https://localhost:9000/categoriaEmpleados');
+    if (!res.ok) throw new Error('Error al cargar categorías');
+    categorias.value = await res.json();
+  } catch (err) {
+    error.value = err.message;
+  }
+};
+onMounted(async () => {
+  await fetchDocentes();
+  await fetchCategorias();
+});
 </script>
 
 <style scoped>

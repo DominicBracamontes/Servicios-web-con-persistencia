@@ -244,7 +244,7 @@ const confirmarPatch = async () => {
 
   editando.value = true;
   try {
-    const res = await fetch(`https://localhost:3000/contratos/${props.numEmpleado}`, {
+    const res = await fetch(`https://localhost:9000/contratos/${props.numEmpleado}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ clave, nuevoNumEmpleado, nuevaClave })
@@ -283,7 +283,7 @@ const confirmarEliminacion = async () => {
   deleting.value = true;
   try {
     const res = await fetch(
-      `https://localhost:3000/contratos/${props.numEmpleado}`,
+      `https://localhost:9000/contratos/${props.numEmpleado}`,
       {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -316,7 +316,7 @@ const abrirDialogoAgregar = async () => {
   asignaturaSeleccionada.value = null;
 
   try {
-    const res = await fetch('https://localhost:3000/asignaturas');
+    const res = await fetch('https://localhost:9000/asignaturas');
     const result = await res.json();  
 
     todasAsignaturas.value = result.map(a => ({
@@ -334,7 +334,7 @@ const confirmarAgregar = async () => {
 
   agregando.value = true;
   try {
-    const res = await fetch(`https://localhost:3000/contratos`, {
+    const res = await fetch(`https://localhost:9000/contratos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -388,7 +388,7 @@ const confirmarEdicion = async () => {
 
   editando.value = true;
   try {
-    const res = await fetch(`https://localhost:3000/contratos/${props.numEmpleado}`, {
+    const res = await fetch(`https://localhost:9000/contratos/${props.numEmpleado}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ clave, nuevoNumEmpleado, nuevaClave })
@@ -431,7 +431,7 @@ const fetchAsignaturas = async (numEmpleado) => {
     loading.value = true;
     noDataMessage.value = 'Cargando asignaturas...';
 
-    const res = await fetch(`https://localhost:3000/docentes/${numEmpleado}/contratos`);
+    const res = await fetch(`https://localhost:9000/docentes/${numEmpleado}/contratos`);
     const result = await res.json();
     if (result.status !== 'success') throw new Error(result.message);
 

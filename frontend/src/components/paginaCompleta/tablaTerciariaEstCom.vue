@@ -70,7 +70,7 @@
   
 async function fetchDocente(numEmpleado) {
   try {
-    const response = await fetch(`https://localhost:3000/contratos/${numEmpleado}`);
+    const response = await fetch(`https://localhost:9000/contratos/${numEmpleado}`);
     if (!response.ok) throw new Error('Error al obtener docente');
     const result = await response.json();
     console.log('Respuesta docente:', result);
@@ -93,7 +93,7 @@ async function fetchDocente(numEmpleado) {
 
 async function fetchDocentesDeAsignatura(claveAsignatura) {
   try {
-    const response = await fetch(`https://localhost:3000/contratos/asignaturas/${claveAsignatura}`);
+    const response = await fetch(`https://localhost:9000/contratos/asignaturas/${claveAsignatura}`);
     if (!response.ok) return [];
     const result = await response.json();
     if (result.status !== 'success') return [];
@@ -118,7 +118,7 @@ async function fetchDocentesDeAsignatura(claveAsignatura) {
       loading.value = true;
       docentesPorAsignatura.value = [];
   
-      const response = await fetch(`https://localhost:3000/inscripciones/estudiante/${matricula}`);
+      const response = await fetch(`https://localhost:9000/inscripciones/estudiante/${matricula}`);
       if (!response.ok) throw new Error('Error al obtener inscripciones');
   
       const result = await response.json();

@@ -1,25 +1,34 @@
 <template>
   <div>
+     <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
+    {{ snackbar.message }}
+    <template v-slot:actions>
+
+      <v-btn variant="text" @click="snackbar.show = false"></v-btn>
+    </template>
+  </v-snackbar>
+
     <v-alert v-if="error" type="error" class="mb-4">
       {{ error }}
     </v-alert>
 
     <!-- POST -->
-    <v-btn 
-      color="primary" 
-      class="mb-4"
-      @click="openCreateDialog"
-    >
-      <v-icon left>mdi-plus</v-icon>
-      Agregar Asignatura
-    </v-btn>
-
+   <div class="text-right">
+  <v-btn 
+    color="primary" 
+    class="mb-4"
+    @click="openCreateDialog"
+  >
+    <v-icon left>mdi-plus</v-icon>
+    Nueva Asignatura
+  </v-btn>
+    </div>
     <template v-if="!loading && asignaturas.length > 0">
       <v-data-table-virtual
         :headers="headers"
         :items="asignaturas"
         :item-height="50"
-        height="auto"
+        height="300px"
         fixed-header
         class="compact-table"
       >
@@ -318,13 +327,25 @@ const asignaturaAPatch = ref({
 const patchForm = ref(null);
 
 //PATCH
+const asignaturaOriginal = ref({
+  clave: null,
+  nombre: '',
+  creditos: null
+});
 const openPatchDialog = (item) => {
+  asignaturaOriginal.value = {
+    clave: Number(item.clave),
+    nombre: item.nombre,
+    creditos: Number(item.creditos)
+  };
+  
   asignaturaAPatch.value = {
     claveOriginal: Number(item.clave),
     nombre: item.nombre,
     creditos: Number(item.creditos),
-    nuevaClave: Number(item.clave) 
+    nuevaClave: Number(item.clave)
   };
+  
   patchDialog.value = true;
 };
 const aplicarPatch = async () => {
@@ -333,19 +354,43 @@ const aplicarPatch = async () => {
   const { valid } = await patchForm.value.validate();
   if (!valid) return;
 
+  // Verificar si hay cambios
+  const cambios = {
+    nombre: asignaturaAPatch.value.nombre !== asignaturaOriginal.value.nombre,
+    creditos: asignaturaAPatch.value.creditos !== asignaturaOriginal.value.creditos,
+    clave: asignaturaAPatch.value.nuevaClave !== asignaturaOriginal.value.clave
+  };
+
+  // Si no hay ningún cambio, mostrar snackbar y salir
+  if (!cambios.nombre && !cambios.creditos && !cambios.clave) {
+    showSnackbar('No hay cambios para actualizar', 'warning');
+    return;
+  }
+
   patching.value = true;
 
   try {
-    const response = await fetch(`https://localhost:3000/asignaturas/${asignaturaAPatch.value.claveOriginal}`, {
+    // Crear payload solo con los campos modificados
+    const payload = {};
+    
+    if (cambios.nombre) {
+      payload.nombre = asignaturaAPatch.value.nombre;
+    }
+    
+    if (cambios.creditos) {
+      payload.creditos = Number(asignaturaAPatch.value.creditos);
+    }
+    
+    if (cambios.clave) {
+      payload.nuevaClave = Number(asignaturaAPatch.value.nuevaClave);
+    }
+
+    const response = await fetch(`https://localhost:9000/asignaturas/${asignaturaAPatch.value.claveOriginal}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        nombre: asignaturaAPatch.value.nombre,
-        creditos: Number(asignaturaAPatch.value.creditos),
-        nuevaClave: Number(asignaturaAPatch.value.nuevaClave)
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -353,16 +398,29 @@ const aplicarPatch = async () => {
       throw new Error(errorData.message || 'Error al modificar asignatura');
     }
 
+    showSnackbar('Asignatura actualizada correctamente', 'success');
     await fetchAsignaturas();
-    
     patchDialog.value = false;
   } catch (err) {
     error.value = err.message;
+    showSnackbar(`Error: ${err.message}`, 'error');
   } finally {
     patching.value = false;
   }
 };
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'info'
+});
 
+const showSnackbar = (message, color = 'success') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color
+  };
+};
 //PUT
 const openEditDialog = (item) => {
   asignaturaAEditar.value = {
@@ -384,7 +442,7 @@ const editarAsignatura = async () => {
   try {
     const claveOriginal = asignaturaAEditar.value.claveOriginal;
 
-    const response = await fetch(`https://localhost:3000/asignaturas/${claveOriginal}`, {
+    const response = await fetch(`https://localhost:9000/asignaturas/${claveOriginal}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -434,7 +492,7 @@ const crearAsignatura = async () => {
   creating.value = true;
 
   try {
-    const response = await fetch('https://localhost:3000/asignaturas', {
+    const response = await fetch('https://localhost:9000/asignaturas', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -473,7 +531,7 @@ const confirmarEliminacion = async () => {
   try {
     const claveNumerica = Number(asignaturaAEliminar.value.clave);
     
-    const response = await fetch(`https://localhost:3000/asignaturas/${claveNumerica}`, {
+    const response = await fetch(`https://localhost:9000/asignaturas/${claveNumerica}`, {
       method: 'DELETE',
     });
 
@@ -498,7 +556,7 @@ const fetchAsignaturas = async () => {
     error.value = null;
     asignaturas.value = [];
 
-    const response = await fetch('https://localhost:3000/asignaturas');
+    const response = await fetch('https://localhost:9000/asignaturas');
     if (!response.ok) throw new Error('Error al cargar datos');
 
     const data = await response.json();

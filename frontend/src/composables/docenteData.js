@@ -8,7 +8,7 @@ export function useDocenteData() {
     
     const fetchDocentes = async () => {
         try {
-            const response = await fetch('https://localhost:3000/docentes');
+            const response = await fetch('https://localhost:9000/docentes');
             if (!response.ok) throw new Error('Error al cargar docentes');
             
             const data = await response.json();
