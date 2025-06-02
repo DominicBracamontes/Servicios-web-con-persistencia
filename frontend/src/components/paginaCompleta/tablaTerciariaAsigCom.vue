@@ -1,3 +1,86 @@
+<template>
+  <div>
+    <v-alert v-if="error" type="error" class="mb-4">{{ error }}</v-alert>
+
+    <v-btn color="primary" class="mb-4" @click="abrirDialogoAgregar" :disabled="!props.clave"
+      title="Agregar contrato para la clave actual">
+      Agregar Contrato
+    </v-btn>
+
+    <template v-if="!loading && docentesAsignatura.length > 0">
+      <v-data-table :headers="headers" :items="docentesAsignatura" :loading="loading" hide-default-footer
+        class="single-row-table">
+        <template v-slot:item.acciones="{ item }">
+          <v-icon color="red" class="cursor-pointer" @click="abrirDialogoEliminar(item)" title="Eliminar contrato">
+            mdi-delete
+          </v-icon>
+        </template>
+
+        <template v-slot:loading>
+          <v-progress-linear indeterminate color="primary" />
+        </template>
+
+        <template v-slot:no-data>
+          <v-alert :type="error ? 'error' : 'info'" class="mt-4">
+            {{ noDataMessage }}
+          </v-alert>
+        </template>
+      </v-data-table>
+    </template>
+
+    <v-alert v-else-if="!loading && docentesAsignatura.length === 0" type="info" class="mt-4">
+      {{ noDataMessage }}
+    </v-alert>
+
+    <v-progress-linear v-if="loading" indeterminate color="primary" class="mt-4" />
+
+    <!-- DELETE-->
+    <v-dialog v-model="deleteDialog" persistent max-width="500">
+      <v-card>
+        <v-card-title class="text-h5">Confirmar Eliminación</v-card-title>
+        <v-card-text>
+          ¿Estás seguro que deseas eliminar el contrato del empleado
+          <strong>{{ contratoAEliminar?.nombre || contratoAEliminar?.numEmpleado }}</strong>
+          (Núm. Empleado: {{ contratoAEliminar?.numEmpleado }})?
+          <br /><br />
+          Esta acción no se puede deshacer.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue-darken-1" variant="text" @click="deleteDialog = false" :disabled="deleting">
+            Cancelar
+          </v-btn>
+          <v-btn color="red-darken-1" variant="text" @click="confirmarEliminacion" :loading="deleting"
+            :disabled="deleting">
+            Confirmar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- POST -->
+    <v-dialog v-model="addDialog" persistent max-width="400">
+      <v-card>
+        <v-card-title class="text-h5">Agregar Contrato</v-card-title>
+        <v-card-text>
+          <v-text-field label="Número de Empleado" v-model="nuevoNumEmpleado" type="number" :disabled="adding"
+            autofocus />
+          <p>Clave de asignatura: <strong>{{ props.clave }}</strong></p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue-darken-1" variant="text" @click="addDialog = false" :disabled="adding">
+            Cancelar
+          </v-btn>
+          <v-btn color="green darken-1" variant="text" @click="confirmarAgregar" :loading="adding" :disabled="adding">
+            Agregar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+
 <script setup>
 import { ref, watch } from 'vue';
 
@@ -17,7 +100,7 @@ const deleteDialog = ref(false);
 const deleting = ref(false);
 const contratoAEliminar = ref(null);
 
-const addDialog = ref(false);  
+const addDialog = ref(false);
 const adding = ref(false);
 const nuevoNumEmpleado = ref('');
 
@@ -27,6 +110,7 @@ const headers = [
   { title: 'Acciones', key: 'acciones', width: '80px', align: 'center' },
 ];
 
+//DELETE
 function abrirDialogoEliminar(contrato) {
   contratoAEliminar.value = contrato;
   deleteDialog.value = true;
@@ -68,6 +152,7 @@ async function confirmarEliminacion() {
   }
 }
 
+//POST
 function abrirDialogoAgregar() {
   nuevoNumEmpleado.value = '';
   addDialog.value = true;
@@ -109,7 +194,7 @@ async function confirmarAgregar() {
   }
 }
 
-
+//EXTRAS
 const fetchDocentes = async (clave) => {
   if (!clave) {
     docentesAsignatura.value = [];
@@ -148,134 +233,6 @@ watch(() => props.clave, (newClave) => {
   fetchDocentes(newClave);
 }, { immediate: true });
 </script>
-
-<template>
-  <div>
-    <v-alert v-if="error" type="error" class="mb-4">{{ error }}</v-alert>
-
-    <v-btn
-      color="primary"
-      class="mb-4"
-      @click="abrirDialogoAgregar"
-      :disabled="!props.clave"
-      title="Agregar contrato para la clave actual"
-    >
-      Agregar Contrato
-    </v-btn>
-
-    <template v-if="!loading && docentesAsignatura.length > 0">
-      <v-data-table
-        :headers="headers"
-        :items="docentesAsignatura"
-        :loading="loading"
-        hide-default-footer
-        class="single-row-table"
-      >
-        <template v-slot:item.acciones="{ item }">
-          <v-icon
-            color="red"
-            class="cursor-pointer"
-            @click="abrirDialogoEliminar(item)"
-            title="Eliminar contrato"
-          >
-            mdi-delete
-          </v-icon>
-        </template>
-
-        <template v-slot:loading>
-          <v-progress-linear indeterminate color="primary" />
-        </template>
-
-        <template v-slot:no-data>
-          <v-alert :type="error ? 'error' : 'info'" class="mt-4">
-            {{ noDataMessage }}
-          </v-alert>
-        </template>
-      </v-data-table>
-    </template>
-
-    <v-alert
-      v-else-if="!loading && docentesAsignatura.length === 0"
-      type="info"
-      class="mt-4"
-    >
-      {{ noDataMessage }}
-    </v-alert>
-
-    <v-progress-linear v-if="loading" indeterminate color="primary" class="mt-4" />
-
-    <!-- DELETE-->
-    <v-dialog v-model="deleteDialog" persistent max-width="500">
-      <v-card>
-        <v-card-title class="text-h5">Confirmar Eliminación</v-card-title>
-        <v-card-text>
-          ¿Estás seguro que deseas eliminar el contrato del empleado
-          <strong>{{ contratoAEliminar?.nombre || contratoAEliminar?.numEmpleado }}</strong>
-          (Núm. Empleado: {{ contratoAEliminar?.numEmpleado }})?
-          <br /><br />
-          Esta acción no se puede deshacer.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="blue-darken-1"
-            variant="text"
-            @click="deleteDialog = false"
-            :disabled="deleting"
-          >
-            Cancelar
-          </v-btn>
-          <v-btn
-            color="red-darken-1"
-            variant="text"
-            @click="confirmarEliminacion"
-            :loading="deleting"
-            :disabled="deleting"
-          >
-            Confirmar
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- POST -->
-    <v-dialog v-model="addDialog" persistent max-width="400">
-      <v-card>
-        <v-card-title class="text-h5">Agregar Contrato</v-card-title>
-        <v-card-text>
-          <v-text-field
-            label="Número de Empleado"
-            v-model="nuevoNumEmpleado"
-            type="number"
-            :disabled="adding"
-            autofocus
-          />
-          <p>Clave de asignatura: <strong>{{ props.clave }}</strong></p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="blue-darken-1"
-            variant="text"
-            @click="addDialog = false"
-            :disabled="adding"
-          >
-            Cancelar
-          </v-btn>
-          <v-btn
-            color="green darken-1"
-            variant="text"
-            @click="confirmarAgregar"
-            :loading="adding"
-            :disabled="adding"
-          >
-            Agregar
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </div>
-</template>
 
 <style scoped>
 .single-row-table {

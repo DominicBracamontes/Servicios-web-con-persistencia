@@ -1,37 +1,28 @@
 <template>
   <div>
-     <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
-    {{ snackbar.message }}
-    <template v-slot:actions>
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
+      {{ snackbar.message }}
+      <template v-slot:actions>
 
-      <v-btn variant="text" @click="snackbar.show = false"></v-btn>
-    </template>
-  </v-snackbar>
+        <v-btn variant="text" @click="snackbar.show = false"></v-btn>
+      </template>
+    </v-snackbar>
 
     <v-alert v-if="error" type="error" class="mb-4">
       {{ error }}
     </v-alert>
 
     <!-- POST -->
-   <div class="text-right">
-  <v-btn 
-    color="primary" 
-    class="mb-4"
-    @click="openCreateDialog"
-  >
-    <v-icon left>mdi-plus</v-icon>
-    Nueva Asignatura
-  </v-btn>
+    <div class="text-right">
+      <v-btn color="primary" class="mb-4" @click="openCreateDialog">
+        <v-icon left>mdi-plus</v-icon>
+        Nueva Asignatura
+      </v-btn>
     </div>
+
     <template v-if="!loading && asignaturas.length > 0">
-      <v-data-table-virtual
-        :headers="headers"
-        :items="asignaturas"
-        :item-height="50"
-        height="300px"
-        fixed-header
-        class="compact-table"
-      >
+      <v-data-table-virtual :headers="headers" :items="asignaturas" :item-height="50" height="300px" fixed-header
+        class="compact-table">
         <template v-slot:item.clave="{ item }">
           <span>{{ item.clave }}</span>
         </template>
@@ -44,32 +35,19 @@
           <span class="text-center">{{ item.creditos }}</span>
         </template>
 
-        
-         <template v-slot:item.acciones="{ item }">
-          <v-icon
-            color="blue"
-            class="mx-1 cursor-pointer"
-            @click.stop="openEditDialog(item)"
-            title="Edición completa (PUT)"
-          >
+
+        <template v-slot:item.acciones="{ item }">
+          <v-icon color="blue" class="mx-1 cursor-pointer" @click.stop="openEditDialog(item)"
+            title="Edición completa (PUT)">
             mdi-pencil
           </v-icon>
-          
-          <v-icon
-            color="orange"
-            class="mx-1 cursor-pointer"
-            @click.stop="openPatchDialog(item)"
-            title="Modificación parcial (PATCH)"
-          >
+
+          <v-icon color="orange" class="mx-1 cursor-pointer" @click.stop="openPatchDialog(item)"
+            title="Modificación parcial (PATCH)">
             mdi-pencil
           </v-icon>
-          
-          <v-icon
-            color="red"
-            class="mx-1 cursor-pointer"
-            @click.stop="openDeleteDialog(item)"
-            title="Eliminar"
-          >
+
+          <v-icon color="red" class="mx-1 cursor-pointer" @click.stop="openDeleteDialog(item)" title="Eliminar">
             mdi-delete
           </v-icon>
         </template>
@@ -82,20 +60,11 @@
       </v-data-table-virtual>
     </template>
 
-    <v-alert
-      v-else-if="!loading && asignaturas.length === 0"
-      type="info"
-      class="mt-4"
-    >
+    <v-alert v-else-if="!loading && asignaturas.length === 0" type="info" class="mt-4">
       No hay asignaturas disponibles
     </v-alert>
 
-    <v-progress-linear
-      v-if="loading"
-      indeterminate
-      color="primary"
-      class="mt-4"
-    />
+    <v-progress-linear v-if="loading" indeterminate color="primary" class="mt-4" />
 
     <!-- DELETE -->
     <v-dialog v-model="deleteDialog" persistent max-width="500">
@@ -113,13 +82,8 @@
           <v-btn color="blue-darken-1" variant="text" @click="deleteDialog = false" :disabled="deleting">
             Cancelar
           </v-btn>
-          <v-btn
-            color="red-darken-1"
-            variant="text"
-            @click="confirmarEliminacion"
-            :loading="deleting"
-            :disabled="deleting"
-          >
+          <v-btn color="red-darken-1" variant="text" @click="confirmarEliminacion" :loading="deleting"
+            :disabled="deleting">
             Confirmar
           </v-btn>
         </v-card-actions>
@@ -132,28 +96,14 @@
         <v-card-title class="text-h5">Crear Asignatura</v-card-title>
         <v-card-text>
           <v-form ref="createForm" @submit.prevent="crearAsignatura">
-            <v-text-field
-              v-model="nuevaAsignatura.clave"
-              label="Clave"
-              type="number"
-              :rules="[v => !!v || 'La clave es requerida']"
-              required
-            ></v-text-field>
+            <v-text-field v-model="nuevaAsignatura.clave" label="Clave" type="number"
+              :rules="[v => !!v || 'La clave es requerida']" required></v-text-field>
 
-            <v-text-field
-              v-model="nuevaAsignatura.nombre"
-              label="Nombre"
-              :rules="[v => !!v || 'El nombre es requerido']"
-              required
-            ></v-text-field>
+            <v-text-field v-model="nuevaAsignatura.nombre" label="Nombre"
+              :rules="[v => !!v || 'El nombre es requerido']" required></v-text-field>
 
-            <v-text-field
-              v-model="nuevaAsignatura.creditos"
-              label="Créditos"
-              type="number"
-              :rules="[v => !!v || 'Los créditos son requeridos']"
-              required
-            ></v-text-field>
+            <v-text-field v-model="nuevaAsignatura.creditos" label="Créditos" type="number"
+              :rules="[v => !!v || 'Los créditos son requeridos']" required></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -161,13 +111,8 @@
           <v-btn color="blue-darken-1" variant="text" @click="closeCreateDialog" :disabled="creating">
             Cancelar
           </v-btn>
-          <v-btn
-            color="green-darken-1"
-            variant="text"
-            @click="crearAsignatura"
-            :loading="creating"
-            :disabled="creating"
-          >
+          <v-btn color="green-darken-1" variant="text" @click="crearAsignatura" :loading="creating"
+            :disabled="creating">
             Crear
           </v-btn>
         </v-card-actions>
@@ -175,84 +120,49 @@
     </v-dialog>
 
     <!-- PUT -->
-<v-dialog v-model="editDialog" persistent max-width="600">
-  <v-card>
-    <v-card-title class="text-h5">Editar Asignatura</v-card-title>
-    <v-card-text>
-      <v-form ref="editForm" @submit.prevent="editarAsignatura">
-        <v-text-field
-          v-model="asignaturaAEditar.nombre"
-          label="Nombre"
-          :rules="[v => !!v || 'El nombre es requerido']"
-          required
-          placeholder="Ingrese nuevo nombre"
-        ></v-text-field>
+    <v-dialog v-model="editDialog" persistent max-width="600">
+      <v-card>
+        <v-card-title class="text-h5">Editar Asignatura</v-card-title>
+        <v-card-text>
+          <v-form ref="editForm" @submit.prevent="editarAsignatura">
+            <v-text-field v-model="asignaturaAEditar.nombre" label="Nombre"
+              :rules="[v => !!v || 'El nombre es requerido']" required
+              placeholder="Ingrese nuevo nombre"></v-text-field>
 
-        <v-text-field
-          v-model="asignaturaAEditar.creditos"
-          label="Créditos"
-          type="number"
-          :rules="[v => !!v || 'Los créditos son requeridos']"
-          required
-          placeholder="Ingrese nuevos créditos"
-        ></v-text-field>
+            <v-text-field v-model="asignaturaAEditar.creditos" label="Créditos" type="number"
+              :rules="[v => !!v || 'Los créditos son requeridos']" required
+              placeholder="Ingrese nuevos créditos"></v-text-field>
 
-        <v-text-field
-          v-model="asignaturaAEditar.nuevaClave"
-          label="Nueva Clave"
-          type="number"
-          :rules="[v => !!v || 'La clave es requerida']"
-          required
-          placeholder="Ingrese nueva clave"
-        ></v-text-field>
-      </v-form>
-    </v-card-text>
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn color="blue-darken-1" variant="text" @click="editDialog = false" :disabled="editing">
-        Cancelar
-      </v-btn>
-      <v-btn
-        color="green-darken-1"
-        variant="text"
-        @click="editarAsignatura"
-        :loading="editing"
-        :disabled="editing"
-      >
-        Guardar Cambios
-      </v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
-    
-     <!-- PATCH-->
+            <v-text-field v-model="asignaturaAEditar.nuevaClave" label="Nueva Clave" type="number"
+              :rules="[v => !!v || 'La clave es requerida']" required placeholder="Ingrese nueva clave"></v-text-field>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue-darken-1" variant="text" @click="editDialog = false" :disabled="editing">
+            Cancelar
+          </v-btn>
+          <v-btn color="green-darken-1" variant="text" @click="editarAsignatura" :loading="editing" :disabled="editing">
+            Guardar Cambios
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- PATCH-->
     <v-dialog v-model="patchDialog" persistent max-width="600">
       <v-card>
         <v-card-title class="text-h5">Modificar Asignatura (PATCH)</v-card-title>
         <v-card-text>
           <v-form ref="patchForm" @submit.prevent="aplicarPatch">
-            <v-text-field
-              v-model="asignaturaAPatch.nombre"
-              label="Nombre"
-              :rules="[v => !!v || 'El nombre es requerido']"
-              required
-            ></v-text-field>
+            <v-text-field v-model="asignaturaAPatch.nombre" label="Nombre"
+              :rules="[v => !!v || 'El nombre es requerido']" required></v-text-field>
 
-            <v-text-field
-              v-model="asignaturaAPatch.creditos"
-              label="Créditos"
-              type="number"
-              :rules="[v => !!v || 'Los créditos son requeridos']"
-              required
-            ></v-text-field>
+            <v-text-field v-model="asignaturaAPatch.creditos" label="Créditos" type="number"
+              :rules="[v => !!v || 'Los créditos son requeridos']" required></v-text-field>
 
-            <v-text-field
-              v-model="asignaturaAPatch.nuevaClave"
-              label="Nueva Clave"
-              type="number"
-              :rules="[v => !!v || 'La clave es requerida']"
-              required
-            ></v-text-field>
+            <v-text-field v-model="asignaturaAPatch.nuevaClave" label="Nueva Clave" type="number"
+              :rules="[v => !!v || 'La clave es requerida']" required></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -260,13 +170,7 @@
           <v-btn color="blue-darken-1" variant="text" @click="patchDialog = false" :disabled="patching">
             Cancelar
           </v-btn>
-          <v-btn
-            color="orange-darken-1"
-            variant="text"
-            @click="aplicarPatch"
-            :loading="patching"
-            :disabled="patching"
-          >
+          <v-btn color="orange-darken-1" variant="text" @click="aplicarPatch" :loading="patching" :disabled="patching">
             Aplicar Cambios
           </v-btn>
         </v-card-actions>
@@ -338,19 +242,19 @@ const openPatchDialog = (item) => {
     nombre: item.nombre,
     creditos: Number(item.creditos)
   };
-  
+
   asignaturaAPatch.value = {
     claveOriginal: Number(item.clave),
     nombre: item.nombre,
     creditos: Number(item.creditos),
     nuevaClave: Number(item.clave)
   };
-  
+
   patchDialog.value = true;
 };
 const aplicarPatch = async () => {
   if (!patchForm.value) return;
-  
+
   const { valid } = await patchForm.value.validate();
   if (!valid) return;
 
@@ -372,15 +276,15 @@ const aplicarPatch = async () => {
   try {
     // Crear payload solo con los campos modificados
     const payload = {};
-    
+
     if (cambios.nombre) {
       payload.nombre = asignaturaAPatch.value.nombre;
     }
-    
+
     if (cambios.creditos) {
       payload.creditos = Number(asignaturaAPatch.value.creditos);
     }
-    
+
     if (cambios.clave) {
       payload.nuevaClave = Number(asignaturaAPatch.value.nuevaClave);
     }
@@ -408,11 +312,7 @@ const aplicarPatch = async () => {
     patching.value = false;
   }
 };
-const snackbar = ref({
-  show: false,
-  message: '',
-  color: 'info'
-});
+
 
 const showSnackbar = (message, color = 'success') => {
   snackbar.value = {
@@ -421,19 +321,21 @@ const showSnackbar = (message, color = 'success') => {
     color
   };
 };
+
 //PUT
 const openEditDialog = (item) => {
   asignaturaAEditar.value = {
-    claveOriginal: Number(item.clave), 
-    nombre: '', 
-    creditos: null, 
-    nuevaClave: null 
+    claveOriginal: Number(item.clave),
+    nombre: '',
+    creditos: null,
+    nuevaClave: null
   };
   editDialog.value = true;
 };
+
 const editarAsignatura = async () => {
   if (!editForm.value) return;
-  
+
   const { valid } = await editForm.value.validate();
   if (!valid) return;
 
@@ -480,12 +382,14 @@ const openCreateDialog = () => {
   nuevaAsignatura.value = { clave: null, nombre: '', creditos: null };
   createDialog.value = true;
 };
+
 const closeCreateDialog = () => {
   createDialog.value = false;
 };
+
 const crearAsignatura = async () => {
   if (!createForm.value) return;
-  
+
   const { valid } = await createForm.value.validate();
   if (!valid) return;
 
@@ -523,6 +427,7 @@ const openDeleteDialog = (item) => {
   asignaturaAEliminar.value = item;
   deleteDialog.value = true;
 };
+
 const confirmarEliminacion = async () => {
   if (!asignaturaAEliminar.value) return;
 
@@ -530,7 +435,7 @@ const confirmarEliminacion = async () => {
 
   try {
     const claveNumerica = Number(asignaturaAEliminar.value.clave);
-    
+
     const response = await fetch(`https://localhost:9000/asignaturas/${claveNumerica}`, {
       method: 'DELETE',
     });
@@ -550,6 +455,7 @@ const confirmarEliminacion = async () => {
   }
 };
 
+//EXTRAS
 const fetchAsignaturas = async () => {
   try {
     loading.value = true;
@@ -571,6 +477,12 @@ const fetchAsignaturas = async () => {
     loading.value = false;
   }
 };
+
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'info'
+});
 
 onMounted(fetchAsignaturas);
 </script>

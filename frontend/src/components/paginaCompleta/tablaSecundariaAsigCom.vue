@@ -1,38 +1,24 @@
 <template>
   <div>
-    <v-text-field
-      v-model="semestre"
-      label="Ingrese el semestre"
-      type="text"
-      class="mb-4"
-      @keyup.enter="filtrarInscripciones"
-    />
+    <v-text-field v-model="semestre" label="Ingrese el semestre" type="text" class="mb-4"
+      @keyup.enter="filtrarInscripciones" />
 
     <v-alert v-if="error" type="error" class="mb-4">
       {{ error }}
     </v-alert>
 
     <div style="max-height: 300px; overflow-y: auto;">
-      <v-data-table-virtual
-        :headers="headers"
-        :items="inscripcionesFiltradas"
-        item-value="id"
-        height="400"
-      >
+      <v-data-table-virtual :headers="headers" :items="inscripcionesFiltradas" item-value="id" height="400">
         <template v-slot:item.acciones="{ item }">
-          <v-icon
-            color="red"
-            class="cursor-pointer"
-            title="Eliminar inscripción"
-            @click="abrirDialogoEliminacion(item)"
-          >
+          <v-icon color="red" class="cursor-pointer" title="Eliminar inscripción"
+            @click="abrirDialogoEliminacion(item)">
             mdi-delete
           </v-icon>
         </template>
       </v-data-table-virtual>
     </div>
 
-    
+
 
     <!-- DELETE -->
     <v-dialog v-model="deleteDialog" persistent max-width="500">
@@ -47,21 +33,11 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="blue-darken-1"
-            variant="text"
-            @click="deleteDialog = false"
-            :disabled="deleting"
-          >
+          <v-btn color="blue-darken-1" variant="text" @click="deleteDialog = false" :disabled="deleting">
             Cancelar
           </v-btn>
-          <v-btn
-            color="red-darken-1"
-            variant="text"
-            @click="confirmarEliminacion"
-            :loading="deleting"
-            :disabled="deleting"
-          >
+          <v-btn color="red-darken-1" variant="text" @click="confirmarEliminacion" :loading="deleting"
+            :disabled="deleting">
             Confirmar
           </v-btn>
         </v-card-actions>
@@ -147,7 +123,7 @@ const filtrarInscripciones = () => {
       insc.semestre === semestreNum
   );
 
- 
+
 };
 
 const abrirDialogoEliminacion = (item) => {
@@ -205,6 +181,7 @@ watch(() => props.clave, cargarInscripciones);
 .mb-4 {
   margin-bottom: 1rem;
 }
+
 .cursor-pointer {
   cursor: pointer;
 }

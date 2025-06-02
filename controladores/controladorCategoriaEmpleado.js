@@ -1,58 +1,56 @@
 const { CategoriaEmpleado, Docente, sequelize } = require('../models');
 
 module.exports = {
-    async obtenerCategorias(req, res) {
-        try {
-          const categorias = await CategoriaEmpleado.findAll({
-            attributes: ['clave', 'nombre'], 
-            order: [['clave', 'ASC']]
-          });
-    
-          res.json(categorias);
-        } catch (error) {
-          console.error('Error al obtener categorías:', error);
-          res.status(500).json({ 
-            error: 'Error al obtener categorías',
-            detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
-          });
-        }
-      },
+  async obtenerCategorias(req, res) {
+    try {
+      const categorias = await CategoriaEmpleado.findAll({
+        attributes: ['clave', 'nombre'],
+        order: [['clave', 'ASC']]
+      });
 
-      async obtenerCategoria(req, res) {
-        try {
-          const { clave } = req.params;
-      
-          const categoria = await CategoriaEmpleado.findOne({
-            where: { clave },  
-            include: [{
-              model: Docente,
-              as: 'docentes',
-              attributes: ['numEmpleado'],
-              include: [{
-                association: 'persona',
-                attributes: ['nombre']
-              }]
-            }]
-          });
-      
-          if (!categoria) {
-            return res.status(404).json({ 
-              error: 'Categoría no encontrada',
-              claveSolicitada: clave
-            });
-          }
-      
-          res.json(categoria);
-        } catch (error) {
-          console.error('Error al obtener categoría:', error);
-          res.status(500).json({ 
-            error: 'Error al obtener categoría',
-            detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
-          });
-        }
-      },
-      
+      res.json(categorias);
+    } catch (error) {
+      console.error('Error al obtener categorías:', error);
+      res.status(500).json({
+        error: 'Error al obtener categorías',
+        detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  },
 
+  async obtenerCategoria(req, res) {
+    try {
+      const { clave } = req.params;
+
+      const categoria = await CategoriaEmpleado.findOne({
+        where: { clave },
+        include: [{
+          model: Docente,
+          as: 'docentes',
+          attributes: ['numEmpleado'],
+          include: [{
+            association: 'persona',
+            attributes: ['nombre']
+          }]
+        }]
+      });
+
+      if (!categoria) {
+        return res.status(404).json({
+          error: 'Categoría no encontrada',
+          claveSolicitada: clave
+        });
+      }
+
+      res.json(categoria);
+    } catch (error) {
+      console.error('Error al obtener categoría:', error);
+      res.status(500).json({
+        error: 'Error al obtener categoría',
+        detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  },
 
   async crearCategoria(req, res) {
     const transaction = await sequelize.transaction();
@@ -167,10 +165,10 @@ module.exports = {
       }
 
       const categoria = await CategoriaEmpleado.findByPk(clave, { transaction });
-      
+
       if (!categoria) {
         await transaction.rollback();
-        return res.status(404).json({ 
+        return res.status(404).json({
           error: 'Categoría no encontrada',
           claveSolicitada: clave
         });
@@ -193,7 +191,7 @@ module.exports = {
 
       await categoria.save({ transaction });
       await transaction.commit();
-      
+
       res.json({
         success: true,
         data: categoria
@@ -222,10 +220,10 @@ module.exports = {
       }
 
       const categoria = await CategoriaEmpleado.findByPk(clave, { transaction });
-      
+
       if (!categoria) {
         await transaction.rollback();
-        return res.status(404).json({ 
+        return res.status(404).json({
           error: 'Categoría no encontrada',
           claveSolicitada: clave
         });
@@ -233,14 +231,14 @@ module.exports = {
 
       const [docentesActualizados] = await Docente.update(
         { categoriaId: 0 },
-        { 
+        {
           where: { categoriaId: clave },
           transaction
         }
       );
 
       await categoria.destroy({ transaction });
-      
+
       await transaction.commit();
 
       res.json({

@@ -30,10 +30,10 @@ module.exports = {
       });
     }
   },
-  
+
   async obtenerInscripcionesPorAsignatura(req, res) {
     try {
-      const { id } = req.params; 
+      const { id } = req.params;
 
       if (isNaN(id)) {
         return res.status(400).json({
@@ -72,7 +72,7 @@ module.exports = {
       if (!estudianteId) errores.push('La matrícula del estudiante es requerida');
       if (!asignaturaId) errores.push('La clave de la asignatura es requerida');
       if (!semestre) errores.push('El semestre es requerido');
-      
+
       if (errores.length > 0) {
         await transaction.rollback();
         return res.status(400).json({ errores });
@@ -80,13 +80,13 @@ module.exports = {
 
       if (calificacion !== undefined && (calificacion < 0 || calificacion > 10)) {
         await transaction.rollback();
-        return res.status(400).json({ 
-          error: 'La calificación debe estar entre 0 y 10' 
+        return res.status(400).json({
+          error: 'La calificación debe estar entre 0 y 10'
         });
       }
 
       const [estudiante, asignatura] = await Promise.all([
-        Estudiante.findOne({ 
+        Estudiante.findOne({
           where: { matricula: estudianteId },
           transaction
         }),
@@ -108,10 +108,10 @@ module.exports = {
       }
 
       const existeInscripcion = await Inscripcion.findOne({
-        where: { 
+        where: {
           estudianteId,
           asignaturaId,
-          semestre 
+          semestre
         },
         transaction
       });
@@ -148,7 +148,7 @@ module.exports = {
     } catch (error) {
       await transaction.rollback();
       console.error('Error al crear inscripción:', error);
-      
+
       if (error.name === 'SequelizeValidationError') {
         return res.status(400).json({
           error: 'Error de validación',
@@ -169,215 +169,215 @@ module.exports = {
   async actualizarInscripcion(req, res) {
     const transaction = await sequelize.transaction();
     try {
-        const { matricula } = req.params;
-        const { 
-            claveAsignaturaOriginal, 
-            semestreOriginal, 
-            nuevaClaveAsignatura, 
-            nuevoSemestre, 
-            nuevaCalificacion 
-        } = req.body;
-
-        if (!claveAsignaturaOriginal || !semestreOriginal || 
-            !nuevaClaveAsignatura || !nuevoSemestre || 
-            nuevaCalificacion === undefined) {
-            await transaction.rollback();
-            return res.status(400).json({ 
-                error: 'Todos los campos son requeridos: claveAsignaturaOriginal, semestreOriginal, nuevaClaveAsignatura, nuevoSemestre y nuevaCalificacion' 
-            });
-        }
-
-        if (nuevaCalificacion !== null && (isNaN(nuevaCalificacion) || nuevaCalificacion < 0 || nuevaCalificacion > 10)) {
-            await transaction.rollback();
-            return res.status(400).json({ 
-                error: 'La calificación debe ser un número entre 0 y 10 o null' 
-            });
-        }
-
-        const estudiante = await Estudiante.findOne({ 
-            where: { matricula }, 
-            transaction 
-        });
-
-        if (!estudiante) {
-            await transaction.rollback();
-            return res.status(404).json({
-                error: 'Estudiante no encontrado'
-            });
-        }
-
-        const [asignaturaOriginal, nuevaAsignatura] = await Promise.all([
-            Asignatura.findOne({ 
-                where: { clave: claveAsignaturaOriginal }, 
-                transaction 
-            }),
-            Asignatura.findOne({ 
-                where: { clave: nuevaClaveAsignatura }, 
-                transaction 
-            })
-        ]);
-
-        if (!asignaturaOriginal || !nuevaAsignatura) {
-            await transaction.rollback();
-            return res.status(404).json({
-                error: 'Asignatura no encontrada',
-                detalles: {
-                    asignaturaOriginal: !!asignaturaOriginal,
-                    nuevaAsignatura: !!nuevaAsignatura
-                }
-            });
-        }
-
-        const inscripcionOriginal = await Inscripcion.findOne({
-            where: {
-                estudianteId: matricula,
-                asignaturaId: claveAsignaturaOriginal,
-                semestre: semestreOriginal
-            },
-            transaction
-        });
-
-        if (!inscripcionOriginal) {
-            await transaction.rollback();
-            return res.status(404).json({
-                error: 'Inscripción original no encontrada'
-            });
-        }
-
-        const inscripcionExistente = await Inscripcion.findOne({
-            where: {
-                estudianteId: matricula,
-                asignaturaId: nuevaClaveAsignatura,
-                semestre: nuevoSemestre
-            },
-            transaction
-        });
-
-        if (inscripcionExistente && 
-            (inscripcionExistente.id !== inscripcionOriginal.id)) {
-            await transaction.rollback();
-            return res.status(409).json({
-                error: 'Ya existe una inscripción con la nueva clave y semestre'
-            });
-        }
-
-        await inscripcionOriginal.update({
-            asignaturaId: nuevaClaveAsignatura,
-            semestre: nuevoSemestre,
-            calificacion: nuevaCalificacion
-        }, { transaction });
-
-        await transaction.commit();
-
-        return res.json({
-            mensaje: 'Inscripción actualizada exitosamente',
-            data: {
-                id: inscripcionOriginal.id,
-                matricula,
-                claveAsignaturaAnterior: claveAsignaturaOriginal,
-                claveAsignaturaNueva: nuevaClaveAsignatura,
-                semestreAnterior: semestreOriginal,
-                semestreNuevo: nuevoSemestre,
-                calificacionAnterior: inscripcionOriginal.calificacion,
-                calificacionNueva: nuevaCalificacion,
-                fechaActualizacion: inscripcionOriginal.updatedAt
-            }
-        });
-
-    } catch (error) {
-        await transaction.rollback();
-        console.error('Error al actualizar inscripción:', error);
-        
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).json({
-                error: 'El estudiante ya está inscrito en esta asignatura para el semestre indicado'
-            });
-        }
-
-        return res.status(500).json({
-            error: 'Error al procesar la solicitud',
-            detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    }
-},
-
-async actualizarParcialInscripcion(req, res) {
-  const transaction = await sequelize.transaction();
-  try {
       const { matricula } = req.params;
-      const { 
-          claveAsignaturaOriginal,
-          semestreOriginal,
-          nuevaClaveAsignatura, 
-          nuevoSemestre, 
-          nuevaCalificacion 
+      const {
+        claveAsignaturaOriginal,
+        semestreOriginal,
+        nuevaClaveAsignatura,
+        nuevoSemestre,
+        nuevaCalificacion
       } = req.body;
 
-      if (!claveAsignaturaOriginal || !semestreOriginal) {
-          await transaction.rollback();
-          return res.status(400).json({ 
-              error: 'Los campos claveAsignaturaOriginal y semestreOriginal son requeridos' 
-          });
+      if (!claveAsignaturaOriginal || !semestreOriginal ||
+        !nuevaClaveAsignatura || !nuevoSemestre ||
+        nuevaCalificacion === undefined) {
+        await transaction.rollback();
+        return res.status(400).json({
+          error: 'Todos los campos son requeridos: claveAsignaturaOriginal, semestreOriginal, nuevaClaveAsignatura, nuevoSemestre y nuevaCalificacion'
+        });
       }
 
-      if (!nuevaClaveAsignatura && !nuevoSemestre && nuevaCalificacion === undefined) {
-          await transaction.rollback();
-          return res.status(400).json({ 
-              error: 'Debe proporcionar al menos un campo a actualizar' 
-          });
+      if (nuevaCalificacion !== null && (isNaN(nuevaCalificacion) || nuevaCalificacion < 0 || nuevaCalificacion > 10)) {
+        await transaction.rollback();
+        return res.status(400).json({
+          error: 'La calificación debe ser un número entre 0 y 10 o null'
+        });
       }
 
-      if (nuevaCalificacion !== undefined && nuevaCalificacion !== null && 
-          (isNaN(nuevaCalificacion) || nuevaCalificacion < 0 || nuevaCalificacion > 10)) {
-          await transaction.rollback();
-          return res.status(400).json({ 
-              error: 'La calificación debe ser entre 0 y 10 o null' 
-          });
+      const estudiante = await Estudiante.findOne({
+        where: { matricula },
+        transaction
+      });
+
+      if (!estudiante) {
+        await transaction.rollback();
+        return res.status(404).json({
+          error: 'Estudiante no encontrado'
+        });
+      }
+
+      const [asignaturaOriginal, nuevaAsignatura] = await Promise.all([
+        Asignatura.findOne({
+          where: { clave: claveAsignaturaOriginal },
+          transaction
+        }),
+        Asignatura.findOne({
+          where: { clave: nuevaClaveAsignatura },
+          transaction
+        })
+      ]);
+
+      if (!asignaturaOriginal || !nuevaAsignatura) {
+        await transaction.rollback();
+        return res.status(404).json({
+          error: 'Asignatura no encontrada',
+          detalles: {
+            asignaturaOriginal: !!asignaturaOriginal,
+            nuevaAsignatura: !!nuevaAsignatura
+          }
+        });
       }
 
       const inscripcionOriginal = await Inscripcion.findOne({
-          where: {
-              estudianteId: matricula,
-              asignaturaId: claveAsignaturaOriginal,
-              semestre: semestreOriginal.toString()
-          },
-          transaction
+        where: {
+          estudianteId: matricula,
+          asignaturaId: claveAsignaturaOriginal,
+          semestre: semestreOriginal
+        },
+        transaction
       });
 
       if (!inscripcionOriginal) {
-          await transaction.rollback();
-          return res.status(404).json({ error: 'Inscripción original no encontrada' });
+        await transaction.rollback();
+        return res.status(404).json({
+          error: 'Inscripción original no encontrada'
+        });
+      }
+
+      const inscripcionExistente = await Inscripcion.findOne({
+        where: {
+          estudianteId: matricula,
+          asignaturaId: nuevaClaveAsignatura,
+          semestre: nuevoSemestre
+        },
+        transaction
+      });
+
+      if (inscripcionExistente &&
+        (inscripcionExistente.id !== inscripcionOriginal.id)) {
+        await transaction.rollback();
+        return res.status(409).json({
+          error: 'Ya existe una inscripción con la nueva clave y semestre'
+        });
+      }
+
+      await inscripcionOriginal.update({
+        asignaturaId: nuevaClaveAsignatura,
+        semestre: nuevoSemestre,
+        calificacion: nuevaCalificacion
+      }, { transaction });
+
+      await transaction.commit();
+
+      return res.json({
+        mensaje: 'Inscripción actualizada exitosamente',
+        data: {
+          id: inscripcionOriginal.id,
+          matricula,
+          claveAsignaturaAnterior: claveAsignaturaOriginal,
+          claveAsignaturaNueva: nuevaClaveAsignatura,
+          semestreAnterior: semestreOriginal,
+          semestreNuevo: nuevoSemestre,
+          calificacionAnterior: inscripcionOriginal.calificacion,
+          calificacionNueva: nuevaCalificacion,
+          fechaActualizacion: inscripcionOriginal.updatedAt
+        }
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error al actualizar inscripción:', error);
+
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(409).json({
+          error: 'El estudiante ya está inscrito en esta asignatura para el semestre indicado'
+        });
+      }
+
+      return res.status(500).json({
+        error: 'Error al procesar la solicitud',
+        detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  },
+
+  async actualizarParcialInscripcion(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+      const { matricula } = req.params;
+      const {
+        claveAsignaturaOriginal,
+        semestreOriginal,
+        nuevaClaveAsignatura,
+        nuevoSemestre,
+        nuevaCalificacion
+      } = req.body;
+
+      if (!claveAsignaturaOriginal || !semestreOriginal) {
+        await transaction.rollback();
+        return res.status(400).json({
+          error: 'Los campos claveAsignaturaOriginal y semestreOriginal son requeridos'
+        });
+      }
+
+      if (!nuevaClaveAsignatura && !nuevoSemestre && nuevaCalificacion === undefined) {
+        await transaction.rollback();
+        return res.status(400).json({
+          error: 'Debe proporcionar al menos un campo a actualizar'
+        });
+      }
+
+      if (nuevaCalificacion !== undefined && nuevaCalificacion !== null &&
+        (isNaN(nuevaCalificacion) || nuevaCalificacion < 0 || nuevaCalificacion > 10)) {
+        await transaction.rollback();
+        return res.status(400).json({
+          error: 'La calificación debe ser entre 0 y 10 o null'
+        });
+      }
+
+      const inscripcionOriginal = await Inscripcion.findOne({
+        where: {
+          estudianteId: matricula,
+          asignaturaId: claveAsignaturaOriginal,
+          semestre: semestreOriginal.toString()
+        },
+        transaction
+      });
+
+      if (!inscripcionOriginal) {
+        await transaction.rollback();
+        return res.status(404).json({ error: 'Inscripción original no encontrada' });
       }
 
       if (nuevaClaveAsignatura) {
-          const nuevaAsignatura = await Asignatura.findOne({ 
-              where: { clave: nuevaClaveAsignatura }, 
-              transaction 
-          });
-          if (!nuevaAsignatura) {
-              await transaction.rollback();
-              return res.status(404).json({ error: 'Nueva asignatura no encontrada' });
-          }
+        const nuevaAsignatura = await Asignatura.findOne({
+          where: { clave: nuevaClaveAsignatura },
+          transaction
+        });
+        if (!nuevaAsignatura) {
+          await transaction.rollback();
+          return res.status(404).json({ error: 'Nueva asignatura no encontrada' });
+        }
       }
 
       if (nuevaClaveAsignatura || nuevoSemestre) {
-          const whereClause = {
-              estudianteId: matricula,
-              asignaturaId: nuevaClaveAsignatura || claveAsignaturaOriginal,
-              semestre: (nuevoSemestre || semestreOriginal).toString()
-          };
+        const whereClause = {
+          estudianteId: matricula,
+          asignaturaId: nuevaClaveAsignatura || claveAsignaturaOriginal,
+          semestre: (nuevoSemestre || semestreOriginal).toString()
+        };
 
-          const existeDuplicado = await Inscripcion.findOne({
-              where: whereClause,
-              transaction
+        const existeDuplicado = await Inscripcion.findOne({
+          where: whereClause,
+          transaction
+        });
+
+        if (existeDuplicado && existeDuplicado.id !== inscripcionOriginal.id) {
+          await transaction.rollback();
+          return res.status(409).json({
+            error: 'Ya existe una inscripción con estos datos'
           });
-
-          if (existeDuplicado && existeDuplicado.id !== inscripcionOriginal.id) {
-              await transaction.rollback();
-              return res.status(409).json({ 
-                  error: 'Ya existe una inscripción con estos datos' 
-              });
-          }
+        }
       }
 
       const updateData = {};
@@ -389,141 +389,141 @@ async actualizarParcialInscripcion(req, res) {
       await transaction.commit();
 
       const response = {
-          mensaje: 'Inscripción actualizada exitosamente',
-          data: {
-              id: inscripcionOriginal.id,
-              matricula,
-              cambios: {}
-          }
+        mensaje: 'Inscripción actualizada exitosamente',
+        data: {
+          id: inscripcionOriginal.id,
+          matricula,
+          cambios: {}
+        }
       };
 
       if (nuevaClaveAsignatura) {
-          response.data.cambios.claveAsignatura = {
-              anterior: claveAsignaturaOriginal,
-              nuevo: nuevaClaveAsignatura
-          };
+        response.data.cambios.claveAsignatura = {
+          anterior: claveAsignaturaOriginal,
+          nuevo: nuevaClaveAsignatura
+        };
       }
 
       if (nuevoSemestre) {
-          response.data.cambios.semestre = {
-              anterior: semestreOriginal,
-              nuevo: nuevoSemestre
-          };
+        response.data.cambios.semestre = {
+          anterior: semestreOriginal,
+          nuevo: nuevoSemestre
+        };
       }
 
       if (nuevaCalificacion !== undefined) {
-          response.data.cambios.calificacion = {
-              anterior: inscripcionOriginal.calificacion,
-              nuevo: nuevaCalificacion
-          };
+        response.data.cambios.calificacion = {
+          anterior: inscripcionOriginal.calificacion,
+          nuevo: nuevaCalificacion
+        };
       }
 
       return res.json(response);
 
-  } catch (error) {
+    } catch (error) {
       await transaction.rollback();
       console.error('Error al actualizar inscripción:', error);
-      
+
       if (error.name === 'SequelizeUniqueConstraintError') {
-          return res.status(409).json({
-              error: 'El estudiante ya está inscrito con estos datos'
-          });
+        return res.status(409).json({
+          error: 'El estudiante ya está inscrito con estos datos'
+        });
       }
 
       return res.status(500).json({
-          error: 'Error interno del servidor',
-          detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: 'Error interno del servidor',
+        detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
-  }
-},
+    }
+  },
 
   async eliminarInscripcion(req, res) {
     const transaction = await sequelize.transaction();
     try {
-        const { matricula } = req.params;
-        const { claveAsignatura, semestre } = req.body;
+      const { matricula } = req.params;
+      const { claveAsignatura, semestre } = req.body;
 
-        if (!matricula || !claveAsignatura || !semestre) {
-            await transaction.rollback();
-            return res.status(400).json({ 
-                error: 'Datos incompletos',
-                detalles: {
-                    requeridos: {
-                        matricula: 'En URL (/inscripciones/:matricula)',
-                        claveAsignatura: 'En cuerpo de solicitud',
-                        semestre: 'En cuerpo de solicitud'
-                    }
-                }
-            });
-        }
-
-        const inscripcion = await Inscripcion.findOne({
-            where: {
-                estudianteId: matricula,
-                asignaturaId: claveAsignatura,
-                semestre: semestre.toString()
-            },
-            transaction
-        });
-
-        if (!inscripcion) {
-            await transaction.rollback();
-            return res.status(404).json({
-                error: 'Inscripción no encontrada',
-                parametros: {
-                    matricula,
-                    claveAsignatura, 
-                    semestre
-                }
-            });
-        }
-
-        const [estudiante, asignatura] = await Promise.all([
-            Estudiante.findOne({
-                where: { matricula },
-                attributes: ['matricula'], 
-                transaction
-            }),
-            Asignatura.findOne({
-                where: { clave: claveAsignatura },
-                attributes: ['clave', 'nombre'], 
-                transaction
-            })
-        ]);
-
-        await inscripcion.destroy({ transaction });
-        await transaction.commit();
-
-        return res.json({
-            mensaje: 'Inscripción eliminada exitosamente',
-            datos: {
-                id: inscripcion.id,
-                estudiante: {
-                    matricula: estudiante?.matricula || matricula
-                },
-                asignatura: {
-                    clave: asignatura?.clave || claveAsignatura,
-                    nombre: asignatura?.nombre || 'Asignatura no encontrada'
-                },
-                semestre: inscripcion.semestre,
-                calificacion: inscripcion.calificacion
+      if (!matricula || !claveAsignatura || !semestre) {
+        await transaction.rollback();
+        return res.status(400).json({
+          error: 'Datos incompletos',
+          detalles: {
+            requeridos: {
+              matricula: 'En URL (/inscripciones/:matricula)',
+              claveAsignatura: 'En cuerpo de solicitud',
+              semestre: 'En cuerpo de solicitud'
             }
+          }
         });
+      }
+
+      const inscripcion = await Inscripcion.findOne({
+        where: {
+          estudianteId: matricula,
+          asignaturaId: claveAsignatura,
+          semestre: semestre.toString()
+        },
+        transaction
+      });
+
+      if (!inscripcion) {
+        await transaction.rollback();
+        return res.status(404).json({
+          error: 'Inscripción no encontrada',
+          parametros: {
+            matricula,
+            claveAsignatura,
+            semestre
+          }
+        });
+      }
+
+      const [estudiante, asignatura] = await Promise.all([
+        Estudiante.findOne({
+          where: { matricula },
+          attributes: ['matricula'],
+          transaction
+        }),
+        Asignatura.findOne({
+          where: { clave: claveAsignatura },
+          attributes: ['clave', 'nombre'],
+          transaction
+        })
+      ]);
+
+      await inscripcion.destroy({ transaction });
+      await transaction.commit();
+
+      return res.json({
+        mensaje: 'Inscripción eliminada exitosamente',
+        datos: {
+          id: inscripcion.id,
+          estudiante: {
+            matricula: estudiante?.matricula || matricula
+          },
+          asignatura: {
+            clave: asignatura?.clave || claveAsignatura,
+            nombre: asignatura?.nombre || 'Asignatura no encontrada'
+          },
+          semestre: inscripcion.semestre,
+          calificacion: inscripcion.calificacion
+        }
+      });
 
     } catch (error) {
-        await transaction.rollback();
-        console.error('Error al eliminar inscripción:', error);
-        
-        return res.status(500).json({
-            error: 'Error interno del servidor',
-            detalle: process.env.NODE_ENV === 'development' ? {
-                tipo: error.name,
-                mensaje: error.message,
-                ...(error.errors && { errores: error.errors.map(e => e.message) })
-            } : undefined
-        });
+      await transaction.rollback();
+      console.error('Error al eliminar inscripción:', error);
+
+      return res.status(500).json({
+        error: 'Error interno del servidor',
+        detalle: process.env.NODE_ENV === 'development' ? {
+          tipo: error.name,
+          mensaje: error.message,
+          ...(error.errors && { errores: error.errors.map(e => e.message) })
+        } : undefined
+      });
     }
-},
+  },
 
   async obtenerInscripcionesEstudiante(req, res) {
     try {

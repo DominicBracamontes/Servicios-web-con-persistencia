@@ -14,7 +14,7 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Docentes',
-          key: 'numEmpleado' 
+          key: 'numEmpleado'
         },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
@@ -26,8 +26,8 @@ module.exports = {
           model: 'Asignaturas',
           key: 'clave'
         },
-        onDelete: 'CASCADE', 
-        onUpdate: 'CASCADE' 
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       },
 
       createdAt: {

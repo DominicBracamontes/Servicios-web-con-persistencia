@@ -6,11 +6,7 @@
       </v-btn>
     </template>
     <v-list>
-      <v-list-item 
-        v-for="(item, index) in items" 
-        :key="index"
-        @click="handleItemClick(item.action)"
-      >
+      <v-list-item v-for="(item, index) in items" :key="index" @click="handleItemClick(item.action)">
         <v-list-item-title>{{ item.title }}</v-list-item-title>
       </v-list-item>
     </v-list>
@@ -42,7 +38,7 @@ const forceReloadCurrentRoute = () => {
 
 const handleItemClick = (action) => {
   emit('update-placeholder', action);
-  
+
   const currentRoute = route.path;
   const targetRoute = getRouteForAction(action);
   const isCurrentRoute = currentRoute === targetRoute;
@@ -63,7 +59,7 @@ const handleItemClick = (action) => {
 };
 
 const getRouteForAction = (action) => {
-  switch(action) {
+  switch (action) {
     case 'estudiantes': return '/paginaBuscarEstudianteCom';
     case 'docentes': return '/paginaBuscarDocCom';
     case 'asignaturas': return '/paginaBuscarAsigCom';

@@ -9,13 +9,13 @@ module.exports = (sequelize, DataTypes) => {
         as: 'persona',
         onDelete: 'CASCADE'
       });
-      
+
       this.belongsToMany(models.Asignatura, {
         through: 'Inscripciones',
         foreignKey: 'estudianteId',
         otherKey: 'asignaturaId',
         as: 'asignaturas',
-        onDelete: 'CASCADE' 
+        onDelete: 'CASCADE'
       });
     }
   }
@@ -38,10 +38,10 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id',
         onDelete: 'CASCADE'
       }
-      
+
     }
-    
-    
+
+
   }, {
     sequelize,
     modelName: 'Estudiante',

@@ -26,7 +26,7 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'CategoriaEmpleados',
-          key: 'clave' 
+          key: 'clave'
         }
       },
       createdAt: {

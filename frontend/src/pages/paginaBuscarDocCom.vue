@@ -1,9 +1,10 @@
 <template>
   <v-app>
     <AppBar @toggle-drawer="drawer = !drawer" />
-        <AppDrawer v-model="drawer" />
+    <AppDrawer v-model="drawer" />
 
-  <v-main :style="{'margin-left': drawer ? '0px' : '64px', 'transition': 'margin-left 0.3s ease'}">      <v-container fluid class="pa-4">
+    <v-main :style="{ 'margin-left': drawer ? '0px' : '64px', 'transition': 'margin-left 0.3s ease' }"> <v-container fluid
+        class="pa-4">
         <v-row class="align-center">
           <!-- <v-col class="flex-grow-0 pr-2">
             <DropdownButton
@@ -16,58 +17,33 @@
           </v-col> -->
 
           <v-col md="3" class="d-flex justify-end">
-            <BotonBuscar
-              :num-empleado="searchQuery"
-              @search="redirectToDocenteSection"
-            />
+            <BotonBuscar :num-empleado="searchQuery" @search="redirectToDocenteSection" />
           </v-col>
         </v-row>
 
-        <v-alert
-          v-if="searchError"
-          type="error"
-          dismissible
-          @input="searchError = null"
-          class="mb-4"
-        >
+        <v-alert v-if="searchError" type="error" dismissible @input="searchError = null" class="mb-4">
           {{ searchError }}
         </v-alert>
 
         <v-row v-if="!mostrarDetalles">
           <v-col cols="12">
-            <TablaPrincipal 
-              :items="filteredDocentes"
-              class="mb-4"
-              @row-click="showDocenteDetails"
-            />
+            <TablaPrincipal :items="filteredDocentes" class="mb-4" @row-click="showDocenteDetails" />
           </v-col>
         </v-row>
 
         <template v-if="mostrarDetalles">
-          <v-btn
-            color="primary"
-            class="mb-4"
-            @click="returnToList"
-          >
+          <v-btn color="primary" class="mb-4" @click="returnToList">
             <v-icon left>mdi-arrow-left</v-icon>
             Volver a la lista
           </v-btn>
 
           <v-row>
             <v-col cols="12" md="8">
-              <TablaDeUnRegistroDocCom 
-                :num-empleado="currentNumEmp"
-                class="mb-4"
-                @return-to-list="returnToList"
-              />
-
-              
+              <TablaDeUnRegistroDocCom :num-empleado="currentNumEmp" class="mb-4" @return-to-list="returnToList" />
             </v-col>
 
             <v-col cols="12" md="4">
-              <TablaTerciariaDoc 
-                :num-empleado="currentNumEmp"
-              />
+              <TablaTerciariaDoc :num-empleado="currentNumEmp" />
             </v-col>
           </v-row>
         </template>
@@ -83,11 +59,14 @@ const drawer = ref(true);
 
 import AppBar from '@/components/AppBar.vue';
 import AppDrawer from '@/components/drawer.vue';
+
 import DropdownButton from '@/components/paginaCompleta/dropDownButtonCom.vue';
+
 import TablaPrincipal from '@/components/paginaCompleta/tablaPrincipalDocCom.vue';
 import TablaTerciariaDoc from '@/components/paginaCompleta/tablaTerciariaDocCom.vue';
-import BotonBuscar from '@/components/paginaBuscar/botonBuscarEst.vue';
 import TablaDeUnRegistroDocCom from '@/components/paginaCompleta/tablaDeUnRegistroDocCom.vue';
+
+import BotonBuscar from '@/components/paginaBuscar/botonBuscarEst.vue';
 
 import { useDocenteData } from '@/composables/docenteData';
 
@@ -128,7 +107,7 @@ const showDocenteDetails = (docente) => {
 const returnToList = () => {
   mostrarDetalles.value = false;
   currentNumEmp.value = '';
-  loadDocentes(); 
+  loadDocentes();
 };
 
 const handleDocenteDeleted = (numEmpleado) => {
@@ -142,7 +121,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Estilos para asegurar visibilidad */
 .v-navigation-drawer {
   z-index: 1000;
 }
@@ -153,6 +131,6 @@ onMounted(() => {
 }
 
 .v-main--has-drawer {
-  margin-left: 256px; /* Ajusta según el ancho de tu drawer */
+  margin-left: 256px;
 }
 </style>

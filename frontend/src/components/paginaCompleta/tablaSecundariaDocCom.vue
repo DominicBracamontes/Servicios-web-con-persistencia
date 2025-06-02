@@ -1,15 +1,9 @@
 <template>
   <div>
-    <v-data-table
-      :headers="headers"
-      :items="asignaturas"
-      :loading="loading"
-      hide-default-footer
-      @click:row="handleRowClick"
-      class="asignaturas-table"
-    >
+    <v-data-table :headers="headers" :items="asignaturas" :loading="loading" hide-default-footer
+      @click:row="handleRowClick" class="asignaturas-table">
       <template v-slot:top>
-       
+
       </template>
 
       <template v-slot:loading>
@@ -64,17 +58,17 @@ const fetchAsignaturas = async (numEmpleado) => {
     error.value = null;
     asignaturas.value = [];
     noDataMessage.value = 'Cargando asignaturas...';
-    
+
     const response = await fetch(`https://localhost:9000/docentes/${numEmpleado}/contratos`);
-    
+
     if (!response.ok) {
-      throw new Error(response.status === 404 
-        ? 'No se encontraron asignaturas para este docente' 
+      throw new Error(response.status === 404
+        ? 'No se encontraron asignaturas para este docente'
         : 'Error al cargar asignaturas');
     }
-    
+
     const result = await response.json();
-    
+
     if (result.status !== 'success') {
       throw new Error(result.message || 'Error en la respuesta del servidor');
     }
@@ -84,9 +78,9 @@ const fetchAsignaturas = async (numEmpleado) => {
       nombre: contrato.asignatura.nombre,
       creditos: contrato.asignatura.creditos
     }));
-    
+
     noDataMessage.value = 'No se encontraron asignaturas';
-    
+
   } catch (err) {
     error.value = err.message;
     noDataMessage.value = err.message;

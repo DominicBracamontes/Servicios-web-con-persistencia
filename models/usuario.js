@@ -20,13 +20,13 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       validate: {
         notEmpty: true,
-        len: [6, 100] 
+        len: [6, 100]
       }
     },
     correo: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true, 
+      unique: true,
       validate: {
         notEmpty: true,
         isEmail: true

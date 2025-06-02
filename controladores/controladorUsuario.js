@@ -5,7 +5,7 @@ module.exports = {
   async obtenerUsuarios(req, res) {
     try {
       const usuarios = await Usuario.findAll({
-        attributes: ['correo'] 
+        attributes: ['correo']
       });
       res.json(usuarios);
     } catch (error) {

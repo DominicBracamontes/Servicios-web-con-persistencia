@@ -16,53 +16,33 @@
           </v-col> -->
 
           <v-col md="3" class="d-flex justify-end">
-            <BotonBuscar
-              :matricula="searchQuery"
-              @search="redirectToStudentSection"
-            />
+            <BotonBuscar :matricula="searchQuery" @search="redirectToStudentSection" />
           </v-col>
         </v-row>
 
-        
+
         <v-row v-if="!mostrarDetalles">
           <v-col cols="12">
-            <TablaPrincipal 
-              :items="filteredStudents"
-              class="mb-4"
-              @row-click="showStudentDetails"
-            />
+            <TablaPrincipal :items="filteredStudents" class="mb-4" @row-click="showStudentDetails" />
           </v-col>
         </v-row>
 
         <template v-if="mostrarDetalles">
-          <v-btn
-            color="primary"
-            class="mb-4"
-            @click="returnToList"
-          >
+          <v-btn color="primary" class="mb-4" @click="returnToList">
             <v-icon left>mdi-arrow-left</v-icon>
             Volver a la lista
           </v-btn>
 
           <v-row>
             <v-col cols="12" md="7">
-              <tablaDeUnRegistroEstCom 
-                :matricula="currentMatricula"
-                class="mb-4"
-                @student-deleted="handleStudentDeleted"
-                @return-to-list="returnToList"
-              />
+              <tablaDeUnRegistroEstCom :matricula="currentMatricula" class="mb-4"
+                @student-deleted="handleStudentDeleted" @return-to-list="returnToList" />
 
-              <TablaSecundariaEst 
-                :matricula="currentMatricula"
-                class="mb-4"
-              />
+              <TablaSecundariaEst :matricula="currentMatricula" class="mb-4" />
             </v-col>
 
             <v-col cols="12" md="5">
-              <TablaTerciariaEst 
-                :matricula="currentMatricula"
-              />
+              <TablaTerciariaEst :matricula="currentMatricula" />
             </v-col>
           </v-row>
         </template>
@@ -78,12 +58,15 @@ import { useRouter } from 'vue-router';
 
 import AppBar from '@/components/AppBar.vue';
 import AppDrawer from '@/components/drawer.vue';
+
 import DropdownButton from '@/components/paginaCompleta/dropDownButtonCom.vue';
+
 import TablaPrincipal from '@/components/paginaCompleta/tablaPrincipalEstCom.vue';
 import TablaSecundariaEst from '@/components/paginaCompleta/TablaSecundariEstCom.vue';
 import TablaTerciariaEst from '@/components/paginaCompleta/tablaTerciariaEstCom.vue';
-import BotonBuscar from '@/components/paginaBuscar/botonBuscarEst.vue';
 import tablaDeUnRegistroEstCom from '@/components/paginaCompleta/tablaDeUnRegistroEstCom.vue';
+
+import BotonBuscar from '@/components/paginaBuscar/botonBuscarEst.vue';
 
 import { useStudentData } from '@/composables/studentData';
 

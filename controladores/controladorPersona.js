@@ -13,7 +13,7 @@ module.exports = {
       res.json(personas);
     } catch (error) {
       console.error('Error en obtenerPersonas:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Error al obtener personas',
         details: process.env.NODE_ENV === 'development' ? error.message : null
       });
@@ -22,21 +22,21 @@ module.exports = {
 
   async obtenerPersonaPorNombre(req, res) {
     try {
-      const { nombre } = req.params; 
-      
+      const { nombre } = req.params;
+
       if (!nombre) {
         return res.status(400).json({ error: 'El nombre es requerido en la URL (ej: /personas/nombre/Juan-Perez)' });
       }
 
-      const nombreBD = nombre.replace(/-/g, ' '); 
+      const nombreBD = nombre.replace(/-/g, ' ');
 
       const persona = await Persona.findOne({
-        where: { nombre: nombreBD }, 
+        where: { nombre: nombreBD },
         include: [
           { model: Estudiante, as: 'estudiante' },
           { model: Docente, as: 'docente' }
         ],
-        paranoid: req.query.paranoid === 'false' 
+        paranoid: req.query.paranoid === 'false'
       });
 
       if (!persona) {
@@ -46,7 +46,7 @@ module.exports = {
       res.json(persona);
     } catch (error) {
       console.error('Error en obtenerPersonaPorNombre:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Error al buscar la persona',
         details: process.env.NODE_ENV === 'development' ? error.message : null
       });
@@ -69,12 +69,12 @@ module.exports = {
       res.status(201).json(persona);
     } catch (error) {
       console.error('Error en crearPersona:', error);
-      
+
       if (error.name === 'SequelizeUniqueConstraintError') {
         return res.status(409).json({ error: 'El email ya está registrado' });
       }
 
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Error al crear persona',
         details: process.env.NODE_ENV === 'development' ? error.message : null
       });
@@ -83,11 +83,11 @@ module.exports = {
 
   async actualizarPersonaPorNombre(req, res) {
     try {
-      const { nombre: nombreUrl } = req.params; 
-      const nombreBD = nombreUrl.replace(/-/g, ' '); 
+      const { nombre: nombreUrl } = req.params;
+      const nombreBD = nombreUrl.replace(/-/g, ' ');
 
       const persona = await Persona.findOne({ where: { nombre: nombreBD } });
-      
+
       if (!persona) {
         return res.status(404).json({ error: 'Persona no encontrada' });
       }
@@ -113,7 +113,7 @@ module.exports = {
       res.json(persona);
     } catch (error) {
       console.error('Error en actualizarPersonaPorNombre:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Error al actualizar persona',
         details: process.env.NODE_ENV === 'development' ? error.message : null
       });
@@ -123,10 +123,10 @@ module.exports = {
   async modificarPersonaPorNombre(req, res) {
     try {
       const { nombre: nombreUrl } = req.params;
-      const nombreBD = nombreUrl.replace(/-/g, ' '); 
+      const nombreBD = nombreUrl.replace(/-/g, ' ');
 
       const persona = await Persona.findOne({ where: { nombre: nombreBD } });
-      
+
       if (!persona) {
         return res.status(404).json({ error: 'Persona no encontrada' });
       }
@@ -163,7 +163,7 @@ module.exports = {
       res.json(persona);
     } catch (error) {
       console.error('Error en modificarPersonaPorNombre:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Error al modificar persona',
         details: process.env.NODE_ENV === 'development' ? error.message : null
       });
@@ -172,73 +172,74 @@ module.exports = {
 
   async eliminarPersonaPorNombre(req, res) {
     if (!sequelize) {
-        console.error('Error: sequelize no está definido');
-        return res.status(500).json({ 
-            error: 'Error de configuración del servidor',
-            detalle: 'Conexión a la base de datos no disponible'
-        });
+      console.error('Error: sequelize no está definido');
+      return res.status(500).json({
+        error: 'Error de configuración del servidor',
+        detalle: 'Conexión a la base de datos no disponible'
+      });
     }
 
     const transaction = await sequelize.transaction();
     try {
-        const { nombre: nombreUrl } = req.params;
-        const nombreBD = nombreUrl.replace(/-/g, ' '); 
+      const { nombre: nombreUrl } = req.params;
+      const nombreBD = nombreUrl.replace(/-/g, ' ');
 
-        const persona = await Persona.findOne({
-            where: { nombre: nombreBD },
-            include: [
-                { model: Estudiante, as: 'estudiante' },
-                { model: Docente, as: 'docente' }
-            ],
-            paranoid: false,
-            transaction
+      const persona = await Persona.findOne({
+        where: { nombre: nombreBD },
+        include: [
+          { model: Estudiante, as: 'estudiante' },
+          { model: Docente, as: 'docente' }
+        ],
+        paranoid: false,
+        transaction
+      });
+
+      if (!persona) {
+        await transaction.rollback();
+        return res.status(404).json({ error: 'Persona no encontrada' });
+      }
+
+      if (persona.estudiante) {
+        await persona.estudiante.destroy({
+          force: true,
+          transaction
         });
+      }
 
-        if (!persona) {
-            await transaction.rollback();
-            return res.status(404).json({ error: 'Persona no encontrada' });
-        }
-
-        if (persona.estudiante) {
-            await persona.estudiante.destroy({ 
-                force: true,
-                transaction
-            });
-        }
-
-        if (persona.docente) {
-            await persona.docente.destroy({ 
-                force: true,
-                transaction
-            });
-        }
-
-        await persona.destroy({ 
-            force: true, 
-            transaction 
+      if (persona.docente) {
+        await persona.docente.destroy({
+          force: true,
+          transaction
         });
+      }
 
-        await transaction.commit();
-        
-        return res.json({ 
-            mensaje: 'Persona y relaciones eliminadas permanentemente',
-            eliminado: {
-                nombre: persona.nombre,
-                estudianteEliminado: !!persona.estudiante,
-                docenteEliminado: !!persona.docente
-            }
-        });
+      await persona.destroy({
+        force: true,
+        transaction
+      });
+
+      await transaction.commit();
+
+      return res.json({
+        mensaje: 'Persona y relaciones eliminadas permanentemente',
+        eliminado: {
+          nombre: persona.nombre,
+          estudianteEliminado: !!persona.estudiante,
+          docenteEliminado: !!persona.docente
+        }
+      });
 
     } catch (error) {
-        await transaction.rollback();
-        console.error('Error en eliminarPersonaPorNombre:', error);
-        
-        return res.status(500).json({ 
-            error: 'Error al eliminar persona',
-            detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+      await transaction.rollback();
+      console.error('Error en eliminarPersonaPorNombre:', error);
+
+      return res.status(500).json({
+        error: 'Error al eliminar persona',
+        detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
-},
+  },
+  
   async restaurarPersona(req, res) {
     try {
       const persona = await Persona.findOne({
@@ -258,7 +259,7 @@ module.exports = {
       res.json({ message: 'Persona restaurada correctamente' });
     } catch (error) {
       console.error('Error en restaurarPersona:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Error al restaurar persona',
         details: process.env.NODE_ENV === 'development' ? error.message : null
       });

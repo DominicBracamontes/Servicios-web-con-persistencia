@@ -1,12 +1,8 @@
 <template>
   <div>
-    <v-data-table
-      :headers="headers"
-      :items="formattedStudentData"
-      :loading="loading"
-      hide-default-footer
-      class="single-row-table"
-    >
+    <v-data-table :headers="headers" :items="formattedStudentData" :loading="loading" hide-default-footer
+      class="single-row-table">
+
       <template v-slot:loading>
         <v-progress-linear indeterminate color="primary"></v-progress-linear>
       </template>
@@ -18,56 +14,30 @@
       </template>
 
       <template v-slot:item.actions="{ item }">
-  <v-icon
-    color="primary"
-    @click.stop="openEditDialog(item)"
-    class="mr-2"
-    title="Edición completa (PUT)"
-  >
-    mdi-pencil
-  </v-icon>
-  <v-icon
-    color="orange"
-    @click.stop="openPatchDialog(item)"
-    class="mr-2"
-    title="Actualización parcial (PATCH)"
-  >
-    mdi-pencil-outline
-  </v-icon>
-  <v-icon
-    color="error"
-    @click.stop="openDeleteDialog(item)"
-    title="Eliminar"
-  >
-    mdi-delete
-  </v-icon>
-</template>
+        <v-icon color="primary" @click.stop="openEditDialog(item)" class="mr-2" title="Edición completa (PUT)">
+          mdi-pencil
+        </v-icon>
+        <v-icon color="orange" @click.stop="openPatchDialog(item)" class="mr-2" title="Actualización parcial (PATCH)">
+          mdi-pencil-outline
+        </v-icon>
+        <v-icon color="error" @click.stop="openDeleteDialog(item)" title="Eliminar">
+          mdi-delete
+        </v-icon>
+      </template>
     </v-data-table>
 
-    <!-- Diálogo de Edición (PUT) -->
+    <!-- PUT -->
     <v-dialog v-model="editDialog" max-width="500">
       <v-card>
         <v-card-title>Editar Estudiante</v-card-title>
         <v-card-text>
           <v-form ref="editForm">
-            <v-text-field
-              v-model="editStudent.matricula"
-              label="Matrícula"
-              :rules="[rules.required]"
-            ></v-text-field>
-            
-            <v-text-field
-              v-model="editStudent.nombre"
-              label="Nombre"
-              :rules="[rules.required]"
-            ></v-text-field>
-            
-            <v-text-field
-              v-model="editStudent.email"
-              label="Email"
-              type="email"
-              :rules="[rules.required, rules.email]"
-            ></v-text-field>
+            <v-text-field v-model="editStudent.matricula" label="Matrícula" :rules="[rules.required]"></v-text-field>
+
+            <v-text-field v-model="editStudent.nombre" label="Nombre" :rules="[rules.required]"></v-text-field>
+
+            <v-text-field v-model="editStudent.email" label="Email" type="email"
+              :rules="[rules.required, rules.email]"></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -85,24 +55,11 @@
         <v-card-title>Actualizar Estudiante (PATCH)</v-card-title>
         <v-card-text>
           <v-form ref="patchForm">
-            <v-text-field
-              v-model="patchStudent.matricula"
-              label="Matrícula"
-              placeholder="matricula"
-            ></v-text-field>
-            
-            <v-text-field
-              v-model="patchStudent.nombre"
-              label="Nombre"
-              placeholder="nombre"
-            ></v-text-field>
-            
-            <v-text-field
-              v-model="patchStudent.email"
-              label="Email"
-              type="email"
-              placeholder="email"
-            ></v-text-field>
+            <v-text-field v-model="patchStudent.matricula" label="Matrícula" placeholder="matricula"></v-text-field>
+
+            <v-text-field v-model="patchStudent.nombre" label="Nombre" placeholder="nombre"></v-text-field>
+
+            <v-text-field v-model="patchStudent.email" label="Email" type="email" placeholder="email"></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -121,27 +78,17 @@
           Confirmar Eliminación
         </v-card-title>
         <v-card-text>
-          ¿Estás seguro que deseas eliminar al estudiante <strong>{{ studentToDelete?.nombre }}</strong> (Matrícula: {{ studentToDelete?.matricula }})?
+          ¿Estás seguro que deseas eliminar al estudiante <strong>{{ studentToDelete?.nombre }}</strong> (Matrícula: {{
+            studentToDelete?.matricula }})?
           <br><br>
           Esta acción no se puede deshacer.
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="blue-darken-1"
-            variant="text"
-            @click="deleteDialog = false"
-            :disabled="deleting"
-          >
+          <v-btn color="blue-darken-1" variant="text" @click="deleteDialog = false" :disabled="deleting">
             Cancelar
           </v-btn>
-          <v-btn
-            color="red-darken-1"
-            variant="text"
-            @click="confirmDelete"
-            :loading="deleting"
-            :disabled="deleting"
-          >
+          <v-btn color="red-darken-1" variant="text" @click="confirmDelete" :loading="deleting" :disabled="deleting">
             Confirmar
           </v-btn>
         </v-card-actions>
@@ -216,7 +163,7 @@ const rules = {
 
 const formattedStudentData = computed(() => {
   if (!studentData.value) return [];
-  
+
   return [{
     matricula: studentData.value.matricula,
     nombre: studentData.value.persona.nombre,
@@ -235,19 +182,19 @@ const fetchStudent = async (matricula) => {
     loading.value = true;
     error.value = null;
     noDataMessage.value = 'Cargando datos del estudiante...';
-    
+
     const response = await fetch(`https://localhost:9000/estudiantes/${matricula}`);
-    
+
     if (!response.ok) {
-      throw new Error(response.status === 404 
-        ? `No se encontró el estudiante con matrícula ${matricula}` 
+      throw new Error(response.status === 404
+        ? `No se encontró el estudiante con matrícula ${matricula}`
         : 'Error al cargar datos del estudiante');
     }
-    
+
     const data = await response.json();
     studentData.value = data;
     noDataMessage.value = 'No se encontraron datos para este estudiante';
-    
+
   } catch (err) {
     error.value = err.message;
     noDataMessage.value = err.message;
@@ -257,19 +204,19 @@ const fetchStudent = async (matricula) => {
   }
 };
 
-//put
+//PUT
 const openEditDialog = async (student) => {
   try {
     loading.value = true;
-    
+
     editStudent.value = {
-      matricula: '',  
-      nombre: '',     
-      email: ''       
+      matricula: '',
+      nombre: '',
+      email: ''
     };
 
-    originalStudentData.value = { 
-      matricula: student.matricula 
+    originalStudentData.value = {
+      matricula: student.matricula
     };
 
     editDialog.value = true;
@@ -300,7 +247,7 @@ const confirmEdit = async () => {
 
   try {
     const payload = {
-      matricula: editStudent.value.matricula, 
+      matricula: editStudent.value.matricula,
       nombre: editStudent.value.nombre,
       email: editStudent.value.email
     };
@@ -324,7 +271,7 @@ const confirmEdit = async () => {
 
     const updatedData = await response.json();
     showSnackbar('Estudiante reemplazado completamente', 'success');
-    
+
     editDialog.value = false;
     emit('student-updated', updatedData);
     await fetchStudent(updatedData.matricula);
@@ -337,7 +284,7 @@ const confirmEdit = async () => {
   }
 };
 
-//patch
+//PATCH
 const openPatchDialog = (student) => {
   patchStudent.value = {
     matricula: student.matricula,
@@ -415,7 +362,7 @@ const confirmPatch = async () => {
   }
 };
 
-//delete
+//DELETE
 const openDeleteDialog = (student) => {
   studentToDelete.value = student;
   deleteDialog.value = true;
@@ -435,7 +382,7 @@ const confirmDelete = async () => {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        errorData.message || 
+        errorData.message ||
         `Error ${response.status}: ${response.statusText}`
       );
     }
@@ -443,7 +390,7 @@ const confirmDelete = async () => {
     showSnackbar('Estudiante eliminado correctamente', 'success');
     emit('student-deleted', studentToDelete.value.matricula);
     emit('return-to-list');
-    
+
   } catch (err) {
     console.error('Error al eliminar:', err);
     showSnackbar(`Error al eliminar: ${err.message}`, 'error');

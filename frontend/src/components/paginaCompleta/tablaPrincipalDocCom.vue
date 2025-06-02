@@ -1,264 +1,181 @@
 <template>
   <div>
     <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
-  {{ snackbar.message }}
-  <template v-slot:actions>
-    <v-btn variant="text" @click="snackbar.show = false"></v-btn>
-  </template>
-</v-snackbar>
-    
+      {{ snackbar.message }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="snackbar.show = false"></v-btn>
+      </template>
+    </v-snackbar>
+
     <v-alert v-if="error" type="error" class="mb-4">
       {{ error }}
     </v-alert>
-<div class="d-flex justify-end mb-4">
+
+    <div class="d-flex justify-end mb-4">
       <v-btn color="primary" @click="nuevoDialogo = true">
         <v-icon left>mdi-plus</v-icon>
         Nuevo Docente
       </v-btn>
     </div>
 
-<!-- TABLA -->
-<template v-if="!loading && docentes.length > 0">
-  <v-data-table-virtual
-    :headers="headers"
-    :items="docentes"
-    :item-height="50"
-    height="auto"
-    fixed-header
-    class="compact-table"
-  >
+    <!-- TABLA -->
+    <template v-if="!loading && docentes.length > 0">
+      <v-data-table-virtual :headers="headers" :items="docentes" :item-height="50" height="auto" fixed-header
+        class="compact-table">
 
-    <template v-slot:item.acciones="{ item }">
-  <v-icon
-    size="14"
-    color="blue"
-    class="mx-1 cursor-pointer"
-    @click="abrirDialogoEdicion(item)"
-  >
-    mdi-pencil
-  </v-icon>
-  <v-icon
-    size="14"
-    color="orange"
-    class="mx-1 cursor-pointer"
-    @click="abrirDialogoPatch(item)"
-  >
-    mdi-pencil
-  </v-icon>
-  <v-icon
-    size="14"
-    color="red"
-    class="mx-1 cursor-pointer"
-    @click="abrirDialogoEliminar(item)"
-  >
-    mdi-delete
-  </v-icon>
-</template>
-    <template v-slot:bottom>
-      <div class="text-caption text-right pa-2">
-        Mostrando {{ docentes.length }} registros
-      </div>
+        <template v-slot:item.acciones="{ item }">
+          <v-icon size="14" color="blue" class="mx-1 cursor-pointer" @click="abrirDialogoEdicion(item)">
+            mdi-pencil
+          </v-icon>
+          <v-icon size="14" color="orange" class="mx-1 cursor-pointer" @click="abrirDialogoPatch(item)">
+            mdi-pencil
+          </v-icon>
+          <v-icon size="14" color="red" class="mx-1 cursor-pointer" @click="abrirDialogoEliminar(item)">
+            mdi-delete
+          </v-icon>
+        </template>
+        <template v-slot:bottom>
+          <div class="text-caption text-right pa-2">
+            Mostrando {{ docentes.length }} registros
+          </div>
+        </template>
+      </v-data-table-virtual>
     </template>
-  </v-data-table-virtual>
-</template>
 
-<v-alert v-else-if="!loading && docentes.length === 0" type="info" class="mt-4">
-  No hay docentes disponibles
-</v-alert>
+    <v-alert v-else-if="!loading && docentes.length === 0" type="info" class="mt-4">
+      No hay docentes disponibles
+    </v-alert>
 
-<v-progress-linear v-if="loading" indeterminate color="primary" class="mt-4" />
+    <v-progress-linear v-if="loading" indeterminate color="primary" class="mt-4" />
 
-<!-- DELETE -->
-<v-dialog v-model="deleteDialog" persistent max-width="500">
-  <v-card>
-    <v-card-title class="text-h5">Confirmar Eliminación</v-card-title>
-    <v-card-text>
-      ¿Estás seguro que deseas eliminar al docente
-      <strong>{{ docenteAEliminar?.nombre }}</strong> (Núm. Empleado:
-      {{ docenteAEliminar?.numEmpleado }})?
-      <br /><br />
-      Esta acción no se puede deshacer.
-    </v-card-text>
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn color="blue-darken-1" variant="text" @click="deleteDialog = false" :disabled="deleting">
-        Cancelar
-      </v-btn>
-      <v-btn
-        color="red-darken-1"
-        variant="text"
-        @click="confirmarEliminacion"
-        :loading="deleting"
-        :disabled="deleting"
-      >
-        Confirmar
-      </v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
+    <!-- DELETE -->
+    <v-dialog v-model="deleteDialog" persistent max-width="500">
+      <v-card>
+        <v-card-title class="text-h5">Confirmar Eliminación</v-card-title>
+        <v-card-text>
+          ¿Estás seguro que deseas eliminar al docente
+          <strong>{{ docenteAEliminar?.nombre }}</strong> (Núm. Empleado:
+          {{ docenteAEliminar?.numEmpleado }})?
+          <br /><br />
+          Esta acción no se puede deshacer.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue-darken-1" variant="text" @click="deleteDialog = false" :disabled="deleting">
+            Cancelar
+          </v-btn>
+          <v-btn color="red-darken-1" variant="text" @click="confirmarEliminacion" :loading="deleting"
+            :disabled="deleting">
+            Confirmar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
-<!-- POST -->
-<v-dialog v-model="nuevoDialogo" persistent max-width="600">
-  <v-card>
-    <v-card-title class="text-h6">Agregar Docente</v-card-title>
-    <v-card-text>
-      <v-form ref="formRef" lazy-validation>
-        <v-text-field v-model="nuevoDocente.numEmpleado" label="Núm. Empleado" type="number" required />
-        <v-text-field v-model="nuevoDocente.categoriaId" label="Categoría ID" type="number" required />
-        <v-text-field v-model="nuevoDocente.persona.nombre" label="Nombre" required />
-        <v-text-field v-model="nuevoDocente.persona.email" label="Email" required />
-      </v-form>
-    </v-card-text>
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn variant="text" @click="nuevoDialogo = false" :disabled="saving">Cancelar</v-btn>
-      <v-btn color="primary" variant="text" @click="crearDocente" :loading="saving" :disabled="saving">
-        Guardar
-      </v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
+    <!-- POST -->
+    <v-dialog v-model="nuevoDialogo" persistent max-width="600">
+      <v-card>
+        <v-card-title class="text-h6">Agregar Docente</v-card-title>
+        <v-card-text>
+          <v-form ref="formRef" lazy-validation>
+            <v-text-field v-model="nuevoDocente.numEmpleado" label="Núm. Empleado" type="number" required />
+            <v-text-field v-model="nuevoDocente.categoriaId" label="Categoría ID" type="number" required />
+            <v-text-field v-model="nuevoDocente.persona.nombre" label="Nombre" required />
+            <v-text-field v-model="nuevoDocente.persona.email" label="Email" required />
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="nuevoDialogo = false" :disabled="saving">Cancelar</v-btn>
+          <v-btn color="primary" variant="text" @click="crearDocente" :loading="saving" :disabled="saving">
+            Guardar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
- <!-- PUT -->
-  <v-dialog v-model="editarDialogo" persistent max-width="600">
-  <v-card>
-    <v-card-title class="text-h6">Editar Docente</v-card-title>
-    <v-card-text>
-      <v-form ref="formEditarRef" lazy-validation>
-        <v-text-field 
-          v-model="docenteAEditar.nuevoNumEmpleado" 
-          label="Nuevo Núm. Empleado *" 
-          type="number" 
-          required 
-          :rules="[v => !!v || 'Campo requerido']"
-        />
-        <v-text-field 
-          v-model="docenteAEditar.categoriaId" 
-          label="Categoría ID *" 
-          type="number" 
-          required 
-          :rules="[v => !!v || 'Campo requerido']"
-        />
-        <v-text-field 
-          v-model="docenteAEditar.persona.nombre" 
-          label="Nombre *" 
-          required 
-          :rules="[v => !!v || 'Campo requerido']"
-        />
-        <v-text-field 
-          v-model="docenteAEditar.persona.email" 
-          label="Email *" 
-          required 
-          :rules="[
-            v => !!v || 'Email es requerido',
-            v => /.+@.+\..+/.test(v) || 'Email debe ser válido'
-          ]"
-        />
-      </v-form>
-      <small>* campos obligatorios</small>
-    </v-card-text>
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn variant="text" @click="editarDialogo = false" :disabled="editando">Cancelar</v-btn>
-      <v-btn 
-        color="primary" 
-        variant="text" 
-        @click="actualizarDocente" 
-        :loading="editando" 
-        :disabled="editando"
-      >
-        Actualizar
-      </v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
+    <!-- PUT -->
+    <v-dialog v-model="editarDialogo" persistent max-width="600">
+      <v-card>
+        <v-card-title class="text-h6">Editar Docente</v-card-title>
+        <v-card-text>
+          <v-form ref="formEditarRef" lazy-validation>
+            <v-text-field v-model="docenteAEditar.nuevoNumEmpleado" label="Nuevo Núm. Empleado *" type="number" required
+              :rules="[v => !!v || 'Campo requerido']" />
+            <v-text-field v-model="docenteAEditar.categoriaId" label="Categoría ID *" type="number" required
+              :rules="[v => !!v || 'Campo requerido']" />
+            <v-text-field v-model="docenteAEditar.persona.nombre" label="Nombre *" required
+              :rules="[v => !!v || 'Campo requerido']" />
+            <v-text-field v-model="docenteAEditar.persona.email" label="Email *" required :rules="[
+              v => !!v || 'Email es requerido',
+              v => /.+@.+\..+/.test(v) || 'Email debe ser válido'
+            ]" />
+          </v-form>
+          <small>* campos obligatorios</small>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="editarDialogo = false" :disabled="editando">Cancelar</v-btn>
+          <v-btn color="primary" variant="text" @click="actualizarDocente" :loading="editando" :disabled="editando">
+            Actualizar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
-<!--PATCH-->
-<v-dialog v-model="patchDialogo" persistent max-width="600">
-  <v-card>
-    <v-card-title class="text-h6">
-      <v-icon left>mdi-pencil</v-icon>
-      Editar Docente 
-    </v-card-title>
-    
-    
-    <v-card-text>
-      <v-form ref="formPatchRef">
-        <!-- Número de Empleado -->
-        <v-text-field 
-          v-model="docenteAPatch.nuevoNumEmpleado" 
-          label="Nuevo Número de Empleado"
-          type="number"
-          :placeholder="`Actual: ${docenteOriginal?.numEmpleado || ''}`"
-          clearable
-          class="mb-3"
-        >
-          <template v-slot:append>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-icon color="grey" v-on="on">mdi-information</v-icon>
+    <!--PATCH-->
+    <v-dialog v-model="patchDialogo" persistent max-width="600">
+      <v-card>
+        <v-card-title class="text-h6">
+          <v-icon left>mdi-pencil</v-icon>
+          Editar Docente
+        </v-card-title>
+
+        <v-card-text>
+          <v-form ref="formPatchRef">
+            <v-text-field v-model="docenteAPatch.nuevoNumEmpleado" label="Nuevo Número de Empleado" type="number"
+              :placeholder="`Actual: ${docenteOriginal?.numEmpleado || ''}`" clearable class="mb-3">
+              <template v-slot:append>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-icon color="grey" v-on="on">mdi-information</v-icon>
+                  </template>
+                  <span>Dejar vacío para mantener el actual</span>
+                </v-tooltip>
               </template>
-              <span>Dejar vacío para mantener el actual</span>
-            </v-tooltip>
-          </template>
-        </v-text-field>
+            </v-text-field>
 
-        <!-- Categoría -->
-        <v-autocomplete
-          v-model="docenteAPatch.categoriaId"
-          :items="categorias"
-          item-title="nombre"
-          item-value="clave"
-          label="Categoría"
-          :placeholder="`Actual: ${getCategoriaName(docenteOriginal?.categoriaId) || 'Sin categoría'}`"
-          clearable
-          class="mb-3"
-        >
-          <template v-slot:selection="{ item }">
-            {{ item.raw.nombre }}
-          </template>
-        </v-autocomplete>
+            <v-autocomplete v-model="currentCategoria" :items="categorias" item-title="nombre" item-value="clave"
+              label="Categoría" :placeholder="getCurrentCategoriaPlaceholder()" return-object clearable class="mb-3">
+              <template v-slot:selection="{ item }">
+                {{ item.raw.nombre }}
+              </template>
+              <template v-slot:prepend-item>
+                <v-list-item title="Actual" :subtitle="getCategoriaName(docenteOriginal?.categoriaId)" />
+                <v-divider class="my-2" />
+              </template>
+            </v-autocomplete>
 
-        <!-- Nombre -->
-        <v-text-field 
-          v-model="docenteAPatch.persona.nombre" 
-          label="Nombre"
-          :placeholder="`Actual: ${docenteOriginal?.nombre || ''}`"
-          clearable
-          class="mb-3"
-        />
+            <v-text-field v-model="docenteAPatch.persona.nombre" label="Nombre"
+              :placeholder="`Actual: ${docenteOriginal?.nombre || ''}`" clearable class="mb-3" />
 
-        <!-- Email -->
-        <v-text-field 
-          v-model="docenteAPatch.persona.email" 
-          label="Email"
-          :placeholder="`Actual: ${docenteOriginal?.email || ''}`"
-          :rules="[v => !v || /.+@.+\..+/.test(v) || 'Email debe ser válido']"
-          clearable
-        />
-      </v-form>
+            <v-text-field v-model="docenteAPatch.persona.email" label="Email"
+              :placeholder="`Actual: ${docenteOriginal?.email || ''}`"
+              :rules="[v => !v || /.+@.+\..+/.test(v) || 'Email debe ser válido']" clearable />
+          </v-form>
+        </v-card-text>
 
-      
-    </v-card-text>
-
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn color="grey" variant="text" @click="patchDialogo = false">
-        Cancelar
-      </v-btn>
-      <v-btn 
-        color="primary" 
-        variant="flat" 
-        @click="aplicarPatch" 
-        :loading="patchLoading"
-        :disabled="patchLoading"
-      >
-        
-        Guardar Cambios
-      </v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="text" @click="patchDialogo = false">
+            Cancelar
+          </v-btn>
+          <v-btn color="primary" variant="flat" @click="aplicarPatch" :loading="patchLoading" :disabled="patchLoading">
+            Guardar Cambios
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -297,6 +214,7 @@ const docenteAEditar = ref({
     email: ''
   }
 });
+const currentCategoria = ref(null);
 
 const patchDialogo = ref(false);
 const patchLoading = ref(false);
@@ -308,61 +226,45 @@ const docenteAPatch = ref({
     email: ''
   }
 });
+
 const numEmpleadoOriginalPatch = ref('');
+
 const formPatchRef = ref(null);
 const categorias = ref([]);
-
 const docenteOriginal = ref(null);
-// patch
 
-const snackbar = ref({
-  show: false,
-  message: '',
-  color: 'warning' // Puede ser 'success', 'error', 'warning', 'info'
-});
-
-const showSnackbar = (message, color = 'success') => {
-  snackbar.value = {
-    show: true,
-    message,
-    color
-  };
-};
-
+// PATCH
 const abrirDialogoPatch = async (docente) => {
   try {
     await fetchCategorias();
-    
-    // Guardar datos originales
+
     docenteOriginal.value = {
       numEmpleado: docente.numEmpleado,
       categoriaId: docente.categoriaId,
       nombre: docente.nombre,
       email: docente.email
     };
-    
-    // Inicializar con valores actuales
+
+    // Convertir ambos a string para comparación segura
+    currentCategoria.value = categorias.value.find(c =>
+      String(c.clave) === String(docente.categoriaId)
+    ) || null;
+
     docenteAPatch.value = {
-      nuevoNumEmpleado: docente.numEmpleado, // Mostrar valor actual
-      categoriaId: docente.categoriaId,      // Mostrar valor actual
+      nuevoNumEmpleado: docente.numEmpleado,
+      categoriaId: docente.categoriaId,
       persona: {
-        nombre: docente.nombre,              // Mostrar valor actual
-        email: docente.email                 // Mostrar valor actual
+        nombre: docente.nombre,
+        email: docente.email
       }
     };
-    
+
     numEmpleadoOriginalPatch.value = docente.numEmpleado;
     patchDialogo.value = true;
   } catch (err) {
     error.value = err.message;
     showSnackbar(`Error al abrir edición: ${err.message}`, 'error');
   }
-};
-
-
-const getCategoriaName = (id) => {
-  const categoria = categorias.value.find(c => c.clave === id);
-  return categoria ? categoria.nombre : '';
 };
 
 const aplicarPatch = async () => {
@@ -373,45 +275,42 @@ const aplicarPatch = async () => {
   error.value = null;
 
   try {
-    // Crear payload solo con los campos modificados
     const payload = {};
-    
-    // Verificar cambios en número de empleado
-    if (docenteAPatch.value.nuevoNumEmpleado && 
-        docenteAPatch.value.nuevoNumEmpleado !== docenteOriginal.value.numEmpleado) {
+
+    if (docenteAPatch.value.nuevoNumEmpleado &&
+      docenteAPatch.value.nuevoNumEmpleado !== docenteOriginal.value.numEmpleado) {
       payload.nuevoNumEmpleado = docenteAPatch.value.nuevoNumEmpleado;
     }
-    
-    // Verificar cambios en categoría
-    if (docenteAPatch.value.categoriaId !== undefined && 
-        docenteAPatch.value.categoriaId !== docenteOriginal.value.categoriaId) {
-      payload.categoriaId = docenteAPatch.value.categoriaId;
+
+    if (currentCategoria.value && currentCategoria.value.clave !== docenteOriginal.value.categoriaId) {
+      payload.categoriaId = currentCategoria.value.clave;
+    } else if (!currentCategoria.value && docenteOriginal.value.categoriaId) {
+      payload.categoriaId = null;
     }
-    
-    // Verificar cambios en datos de persona
+
     const personaChanges = {};
-    if (docenteAPatch.value.persona.nombre && 
-        docenteAPatch.value.persona.nombre !== docenteOriginal.value.nombre) {
+    if (docenteAPatch.value.persona.nombre &&
+      docenteAPatch.value.persona.nombre !== docenteOriginal.value.nombre) {
       personaChanges.nombre = docenteAPatch.value.persona.nombre;
     }
-    if (docenteAPatch.value.persona.email && 
-        docenteAPatch.value.persona.email !== docenteOriginal.value.email) {
+    if (docenteAPatch.value.persona.email &&
+      docenteAPatch.value.persona.email !== docenteOriginal.value.email) {
       personaChanges.email = docenteAPatch.value.persona.email;
     }
-    
+
     if (Object.keys(personaChanges).length > 0) {
       payload.persona = personaChanges;
     }
-    
+
     if (Object.keys(payload).length === 0) {
-      showSnackbar('No shay cambios para actualizar', 'warning');
+      showSnackbar('No hay cambios para actualizar', 'warning');
       patchLoading.value = false;
       return;
     }
 
     const res = await fetch(`https://localhost:9000/docentes/${numEmpleadoOriginalPatch.value}`, {
       method: 'PATCH',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
       },
@@ -434,6 +333,18 @@ const aplicarPatch = async () => {
   }
 };
 
+const getCurrentCategoriaPlaceholder = () => {
+  if (!docenteOriginal.value) return 'Seleccione categoría';
+  const cat = categorias.value.find(c => c.clave == docenteOriginal.value.categoriaId);
+  return cat ? `Actual: ${cat.nombre}` : 'Sin categoría';
+};
+
+const getCategoriaName = (id) => {
+  if (id === null || id === undefined) return 'Sin categoría';
+  const categoria = categorias.value.find(c => String(c.clave) === String(id));
+  return categoria ? categoria.nombre : 'Sin categoría';
+};
+
 //PUT
 const abrirDialogoEdicion = (docente) => {
   numEmpleadoOriginal.value = docente.numEmpleado;
@@ -447,6 +358,7 @@ const abrirDialogoEdicion = (docente) => {
   };
   editarDialogo.value = true;
 };
+
 const actualizarDocente = async () => {
   const { valid } = await formEditarRef.value.validate();
   if (!valid) return;
@@ -467,7 +379,7 @@ const actualizarDocente = async () => {
     }
 
     editarDialogo.value = false;
-    await fetchDocentes(); 
+    await fetchDocentes();
   } catch (err) {
     error.value = err.message;
   } finally {
@@ -480,6 +392,7 @@ const abrirDialogoEliminar = (docente) => {
   docenteAEliminar.value = docente;
   deleteDialog.value = true;
 };
+
 const confirmarEliminacion = async () => {
   if (!docenteAEliminar.value) return;
   deleting.value = true;
@@ -513,6 +426,7 @@ const nuevoDocente = ref({
     email: ''
   }
 });
+
 const crearDocente = async () => {
   saving.value = true;
   error.value = null;
@@ -540,6 +454,22 @@ const crearDocente = async () => {
   }
 };
 
+//EXTRAS
+
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'warning'
+});
+
+const showSnackbar = (message, color = 'success') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color
+  };
+};
+
 const fetchCategoriaNombre = async (clave) => {
   try {
     const res = await fetch(`https://localhost:9000/categoriaEmpleados/${clave}`);
@@ -561,10 +491,12 @@ const fetchDocentes = async () => {
     if (!response.ok) throw new Error('Error al cargar docentes');
 
     const data = await response.json();
+    console.log('Docentes cargados:', data); 
 
     const docentesConCategoria = await Promise.all(
       data.map(async (item) => {
-        const categoriaNombre = item.categoriaId 
+        console.log('Docente item:', item); 
+        const categoriaNombre = item.categoriaId
           ? await fetchCategoriaNombre(item.categoriaId.toString())
           : 'Sin categoría';
 
@@ -572,7 +504,8 @@ const fetchDocentes = async () => {
           numEmpleado: item.numEmpleado,
           nombre: item.persona?.nombre || 'No disponible',
           categoriaEmpleado: categoriaNombre,
-          email: item.persona?.email || 'No disponible'
+          email: item.persona?.email || 'No disponible',
+          categoriaId: item.categoriaId 
         };
       })
     );
@@ -590,10 +523,12 @@ const fetchCategorias = async () => {
     const res = await fetch('https://localhost:9000/categoriaEmpleados');
     if (!res.ok) throw new Error('Error al cargar categorías');
     categorias.value = await res.json();
+    console.log('Categorías cargadas:', categorias.value); 
   } catch (err) {
     error.value = err.message;
   }
 };
+
 onMounted(async () => {
   await fetchDocentes();
   await fetchCategorias();
@@ -606,14 +541,17 @@ onMounted(async () => {
   border: thin solid rgba(0, 0, 0, 0.12);
   border-radius: 4px;
 }
+
 .compact-table :deep(.v-table__wrapper) {
   overflow-y: auto;
   max-height: calc(70vh - 48px);
 }
+
 .cursor-pointer {
   cursor: pointer;
   transition: transform 0.2s ease;
 }
+
 .cursor-pointer:hover {
   transform: scale(1.2);
 }

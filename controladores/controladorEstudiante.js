@@ -1,4 +1,4 @@
-const { Estudiante, Persona, Asignatura, Inscripcion, sequelize,  } = require('../models');
+const { Estudiante, Persona, Asignatura, Inscripcion, sequelize, } = require('../models');
 
 module.exports = {
   async crearEstudiante(req, res) {
@@ -88,242 +88,241 @@ module.exports = {
 
   async obtenerEstudiante(req, res) {
     try {
-        const { matricula } = req.params;
+      const { matricula } = req.params;
 
-        if (!matricula) {
-            return res.status(400).json({
-                error: 'Matrícula requerida',
-                mensaje: 'Debe proporcionar una matrícula en la URL (/estudiantes/:matricula)',
-                ejemplo: '/estudiantes/1001'
-            });
-        }
-
-        const estudiante = await Estudiante.findOne({
-            where: { matricula },
-            attributes: ['id', 'matricula', 'personaId', 'createdAt', 'updatedAt'],
-            include: [{
-                model: Persona,
-                as: 'persona',
-                attributes: ['id', 'nombre', 'email', 'createdAt', 'updatedAt']
-            }]
+      if (!matricula) {
+        return res.status(400).json({
+          error: 'Matrícula requerida',
+          mensaje: 'Debe proporcionar una matrícula en la URL (/estudiantes/:matricula)',
+          ejemplo: '/estudiantes/1001'
         });
+      }
 
-        if (!estudiante) {
-            return res.status(404).json({
-                error: 'Estudiante no encontrado',
-                matriculaBuscada: matricula,
-                sugerencia: 'Verifique que la matrícula sea correcta'
-            });
+      const estudiante = await Estudiante.findOne({
+        where: { matricula },
+        attributes: ['id', 'matricula', 'personaId', 'createdAt', 'updatedAt'],
+        include: [{
+          model: Persona,
+          as: 'persona',
+          attributes: ['id', 'nombre', 'email', 'createdAt', 'updatedAt']
+        }]
+      });
+
+      if (!estudiante) {
+        return res.status(404).json({
+          error: 'Estudiante no encontrado',
+          matriculaBuscada: matricula,
+          sugerencia: 'Verifique que la matrícula sea correcta'
+        });
+      }
+
+      const respuesta = {
+        id: estudiante.id,
+        matricula: estudiante.matricula,
+        personaId: estudiante.personaId,
+        createdAt: estudiante.createdAt,
+        updatedAt: estudiante.updatedAt,
+        persona: {
+          id: estudiante.persona.id,
+          nombre: estudiante.persona.nombre,
+          email: estudiante.persona.email,
+          createdAt: estudiante.persona.createdAt,
+          updatedAt: estudiante.persona.updatedAt,
+          deletedAt: estudiante.persona.deletedAt
         }
+      };
 
-        const respuesta = {
-            id: estudiante.id,
-            matricula: estudiante.matricula,
-            personaId: estudiante.personaId,
-            createdAt: estudiante.createdAt,
-            updatedAt: estudiante.updatedAt,
-            persona: {
-                id: estudiante.persona.id,
-                nombre: estudiante.persona.nombre,
-                email: estudiante.persona.email,
-                createdAt: estudiante.persona.createdAt,
-                updatedAt: estudiante.persona.updatedAt,
-                deletedAt: estudiante.persona.deletedAt
-            }
-        };
-
-        res.json(respuesta);
+      res.json(respuesta);
 
     } catch (error) {
-        console.error('Error al buscar estudiante:', error);
-        
-        res.status(500).json({
-            error: 'Error al obtener el estudiante',
-            detalle: process.env.NODE_ENV === 'development' ? {
-                mensaje: error.message,
-                tipo: error.name,
-                ...(error.errors && { campos: error.errors.map(e => e.path) })
-            } : undefined
+      console.error('Error al buscar estudiante:', error);
+
+      res.status(500).json({
+        error: 'Error al obtener el estudiante',
+        detalle: process.env.NODE_ENV === 'development' ? {
+          mensaje: error.message,
+          tipo: error.name,
+          ...(error.errors && { campos: error.errors.map(e => e.path) })
+        } : undefined
+      });
+    }
+  },
+
+  async actualizarEstudiantePUT(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+      const matriculaActual = req.params.matricula;
+      const { matricula: nuevaMatricula, nombre, email } = req.body;
+
+      if (!nombre || !email) {
+        await transaction.rollback();
+        return res.status(400).json({ error: 'El nombre y el email son obligatorios' });
+      }
+
+      const estudiante = await Estudiante.findOne({
+        where: { matricula: matriculaActual },
+        include: [{ model: Persona, as: 'persona' }],
+        transaction
+      });
+
+      if (!estudiante) {
+        await transaction.rollback();
+        return res.status(404).json({ error: 'Estudiante no encontrado' });
+      }
+
+      if (nuevaMatricula && nuevaMatricula !== matriculaActual) {
+        const existeMatricula = await Estudiante.findOne({
+          where: { matricula: nuevaMatricula },
+          transaction
         });
-    }
-},
 
-async actualizarEstudiantePUT(req, res) {
-  const transaction = await sequelize.transaction();
-  try {
-    const matriculaActual = req.params.matricula;
-    const { matricula: nuevaMatricula, nombre, email } = req.body;
+        if (existeMatricula) {
+          await transaction.rollback();
+          return res.status(400).json({ error: 'La nueva matrícula ya está en uso' });
+        }
 
-    if (!nombre || !email) {
+        await sequelize.models.Inscripcion.update(
+          { matricula: nuevaMatricula },
+          { where: { matricula: matriculaActual }, transaction }
+        );
+
+        await estudiante.update({ matricula: nuevaMatricula }, { transaction });
+      }
+
+      await estudiante.persona.update({ nombre, email }, { transaction });
+
+      await transaction.commit();
+
+      const matriculaFinal = nuevaMatricula || matriculaActual;
+
+      const estudianteActualizado = await Estudiante.findOne({
+        where: { matricula: matriculaFinal },
+        include: [{ model: Persona, as: 'persona' }]
+      });
+
+      res.json({
+        mensaje: 'Estudiante actualizado correctamente',
+        estudiante: {
+          matricula: estudianteActualizado.matricula,
+          nombre: estudianteActualizado.persona?.nombre,
+          email: estudianteActualizado.persona?.email
+        }
+      });
+    } catch (error) {
       await transaction.rollback();
-      return res.status(400).json({ error: 'El nombre y el email son obligatorios' });
+      console.error(error);
+      res.status(500).json({
+        error: 'Error al actualizar el estudiante',
+        detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
+  },
+  
+  async actualizarEstudiantePATCH(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+      const { matricula } = req.params;
+      const { nuevaMatricula, nombre, email } = req.body;
 
-    const estudiante = await Estudiante.findOne({
-      where: { matricula: matriculaActual },
-      include: [{ model: Persona, as: 'persona' }],
-      transaction
-    });
-
-    if (!estudiante) {
-      await transaction.rollback();
-      return res.status(404).json({ error: 'Estudiante no encontrado' });
-    }
-
-    if (nuevaMatricula && nuevaMatricula !== matriculaActual) {
-      const existeMatricula = await Estudiante.findOne({
-        where: { matricula: nuevaMatricula },
+      const estudiante = await Estudiante.findOne({
+        where: { matricula },
+        include: [{ model: Persona, as: 'persona' }],
         transaction
       });
 
-      if (existeMatricula) {
+      if (!estudiante) {
         await transaction.rollback();
-        return res.status(400).json({ error: 'La nueva matrícula ya está en uso' });
+        return res.status(404).json({ error: 'Estudiante no encontrado' });
       }
 
-      await sequelize.models.Inscripcion.update(
-        { matricula: nuevaMatricula },
-        { where: { matricula: matriculaActual }, transaction }
-      );
+      if (nuevaMatricula && nuevaMatricula !== matricula) {
+        const existeMatricula = await Estudiante.findOne({
+          where: { matricula: nuevaMatricula },
+          transaction
+        });
 
-      await estudiante.update({ matricula: nuevaMatricula }, { transaction });
-    }
+        if (existeMatricula) {
+          await transaction.rollback();
+          return res.status(400).json({ error: 'La nueva matrícula ya está en uso' });
+        }
 
-    await estudiante.persona.update({ nombre, email }, { transaction });
-
-    await transaction.commit();
-
-    const matriculaFinal = nuevaMatricula || matriculaActual;
-
-    const estudianteActualizado = await Estudiante.findOne({
-      where: { matricula: matriculaFinal },
-      include: [{ model: Persona, as: 'persona' }]
-    });
-
-    res.json({
-      mensaje: 'Estudiante actualizado correctamente',
-      estudiante: {
-        matricula: estudianteActualizado.matricula,
-        nombre: estudianteActualizado.persona?.nombre,
-        email: estudianteActualizado.persona?.email
+        await sequelize.models.Inscripcion.update(
+          { matricula: nuevaMatricula },
+          { where: { matricula }, transaction }
+        );
       }
-    });
-  } catch (error) {
-    await transaction.rollback();
-    console.error(error);
-    res.status(500).json({
-      error: 'Error al actualizar el estudiante',
-      detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-}
-,
-async actualizarEstudiantePATCH(req, res) {
-  const transaction = await sequelize.transaction();
-  try {
-    const { matricula } = req.params; 
-    const { nuevaMatricula, nombre, email } = req.body;
 
-    const estudiante = await Estudiante.findOne({ 
-      where: { matricula },
-      include: [{ model: Persona, as: 'persona' }], 
-      transaction
-    });
+      const camposAActualizar = {};
+      if (nuevaMatricula && nuevaMatricula !== matricula) camposAActualizar.matricula = nuevaMatricula;
 
-    if (!estudiante) {
+      if (nombre) {
+        await estudiante.persona.update({ nombre }, { transaction });
+      }
+
+      if (email) {
+        await estudiante.persona.update({ email }, { transaction });
+      }
+
+      if (Object.keys(camposAActualizar).length > 0) {
+        await estudiante.update(camposAActualizar, { transaction });
+      }
+
+      await transaction.commit();
+
+      const estudianteActualizado = await Estudiante.findOne({
+        where: { matricula: nuevaMatricula || matricula },
+        include: [{ model: Persona, as: 'persona' }]
+      });
+
+      res.json({
+        mensaje: 'Estudiante actualizado correctamente',
+        estudiante: estudianteActualizado
+      });
+
+    } catch (error) {
       await transaction.rollback();
-      return res.status(404).json({ error: 'Estudiante no encontrado' });
+      console.error(error);
+      res.status(500).json({ error: 'Error al actualizar el estudiante' });
     }
+  },
 
-    if (nuevaMatricula && nuevaMatricula !== matricula) {
-      const existeMatricula = await Estudiante.findOne({
-        where: { matricula: nuevaMatricula },
+  async eliminarEstudiante(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+      const { matricula } = req.params;
+
+      const estudiante = await Estudiante.findOne({
+        where: { matricula },
+        include: [{ model: Persona, as: 'persona' }],
         transaction
       });
 
-      if (existeMatricula) {
+      if (!estudiante) {
         await transaction.rollback();
-        return res.status(400).json({ error: 'La nueva matrícula ya está en uso' });
+        return res.status(404).json({ error: 'Estudiante no encontrado' });
       }
 
-      await sequelize.models.Inscripcion.update(
-        { matricula: nuevaMatricula },
-        { where: { matricula }, transaction }
-      );
-    }
+      const personaId = estudiante.personaId;
 
-    const camposAActualizar = {};
-    if (nuevaMatricula && nuevaMatricula !== matricula) camposAActualizar.matricula = nuevaMatricula;
+      await estudiante.destroy({ force: true, transaction });
 
-    if (nombre) {
-      await estudiante.persona.update({ nombre }, { transaction });
-    }
+      const persona = await Persona.findByPk(personaId, { transaction });
 
-    if (email) {
-      await estudiante.persona.update({ email }, { transaction });
-    }
+      if (persona) {
+        await persona.destroy({ force: true, transaction });
+      }
 
-    if (Object.keys(camposAActualizar).length > 0) {
-      await estudiante.update(camposAActualizar, { transaction });
-    }
-
-    await transaction.commit();
-
-    const estudianteActualizado = await Estudiante.findOne({
-      where: { matricula: nuevaMatricula || matricula },
-      include: [{ model: Persona, as: 'persona' }]
-    });
-
-    res.json({ 
-      mensaje: 'Estudiante actualizado correctamente',
-      estudiante: estudianteActualizado
-    });
-
-  } catch (error) {
-    await transaction.rollback();
-    console.error(error);
-    res.status(500).json({ error: 'Error al actualizar el estudiante' });
-  }
-}
-
-,
-async eliminarEstudiante(req, res) {
-  const transaction = await sequelize.transaction();
-  try {
-    const { matricula } = req.params; 
-
-    const estudiante = await Estudiante.findOne({
-      where: { matricula },
-      include: [{ model: Persona, as: 'persona' }],
-      transaction
-    });
-
-    if (!estudiante) {
+      await transaction.commit();
+      return res.json({ mensaje: 'Estudiante y persona eliminados permanentemente' });
+    } catch (error) {
       await transaction.rollback();
-      return res.status(404).json({ error: 'Estudiante no encontrado' });
+      console.error('Error en eliminarEstudiante:', error);
+      return res.status(500).json({
+        error: 'Error al eliminar estudiante',
+        detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
-
-    const personaId = estudiante.personaId;
-
-    await estudiante.destroy({ force: true, transaction });
-
-    const persona = await Persona.findByPk(personaId, { transaction });
-
-    if (persona) {
-      await persona.destroy({ force: true, transaction });
-    }
-
-    await transaction.commit();
-    return res.json({ mensaje: 'Estudiante y persona eliminados permanentemente' });
-  } catch (error) {
-    await transaction.rollback();
-    console.error('Error en eliminarEstudiante:', error);
-    return res.status(500).json({ 
-      error: 'Error al eliminar estudiante',
-      detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-},
+  },
 
   async restaurarEstudiante(req, res) {
     const transaction = await sequelize.transaction();
@@ -348,7 +347,7 @@ async eliminarEstudiante(req, res) {
 
       await estudiante.restore({ transaction });
       await transaction.commit();
-      
+
       res.json({ mensaje: 'Estudiante restaurado correctamente' });
     } catch (error) {
       await transaction.rollback();
@@ -400,7 +399,7 @@ async eliminarEstudiante(req, res) {
 
       await estudiante.addAsignatura(asignatura, { transaction });
       await transaction.commit();
-      
+
       res.json({ mensaje: 'Estudiante inscrito en la asignatura correctamente' });
     } catch (error) {
       await transaction.rollback();
@@ -434,7 +433,7 @@ async eliminarEstudiante(req, res) {
 
       await estudiante.removeAsignatura(asignatura, { transaction });
       await transaction.commit();
-      
+
       res.json({ mensaje: 'Estudiante desinscrito de la asignatura correctamente' });
     } catch (error) {
       await transaction.rollback();

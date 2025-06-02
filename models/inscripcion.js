@@ -6,14 +6,14 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       this.belongsTo(models.Estudiante, {
         foreignKey: 'estudianteId',
-        targetKey: 'matricula', 
+        targetKey: 'matricula',
         as: 'estudiante',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
       });
       this.belongsTo(models.Asignatura, {
         foreignKey: 'asignaturaId',
-        targetKey: 'clave', 
+        targetKey: 'clave',
         as: 'asignatura',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
@@ -27,20 +27,20 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       references: {
         model: 'Estudiantes',
-        key: 'matricula', 
-         onDelete: 'CASCADE',
-      onUpdate: 'CASCADE'
+        key: 'matricula',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       },
-      
+
     },
     asignaturaId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: 'Asignaturas',
-        key: 'clave', 
+        key: 'clave',
         onUpdate: 'CASCADE',
-      onDelete: 'CASCADE'
+        onDelete: 'CASCADE'
       }
     },
     semestre: {

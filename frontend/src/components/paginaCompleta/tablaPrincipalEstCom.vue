@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- BOTON POST-->
+    <!-- boton POST-->
     <div class="d-flex justify-end mb-4">
       <v-btn color="primary" @click="createDialog = true">
         <v-icon left>mdi-plus</v-icon>
@@ -9,13 +9,8 @@
     </div>
 
     <!-- TABLA-->
-    <v-data-table
-      :headers="headers"
-      :items="formattedStudents"
-      :loading="loading"
-      hide-default-footer
-      class="students-table"
-    >
+    <v-data-table :headers="headers" :items="formattedStudents" :loading="loading" hide-default-footer
+      class="students-table">
       <!-- BOTONES -->
       <template v-slot:loading>
         <v-progress-linear indeterminate color="primary"></v-progress-linear>
@@ -27,34 +22,23 @@
       </template>
       <template v-slot:item.actions="{ item }">
         <div class="d-flex">
-          <v-icon
-            color="primary"
-            class="mr-2"
-            @click.stop="openEditDialog(item)"
-          >
+          <v-icon color="primary" class="mr-2" @click.stop="openEditDialog(item)">
             mdi-pencil
           </v-icon>
-          <v-icon
-            color="orange"
-            class="mr-2"
-            @click.stop="openPatchDialog(item)"
-          >
+          <v-icon color="orange" class="mr-2" @click.stop="openPatchDialog(item)">
             mdi-pencil-plus
           </v-icon>
-          <v-icon
-            color="error"
-            @click.stop="openDeleteDialog(item)"
-          >
+          <v-icon color="error" @click.stop="openDeleteDialog(item)">
             mdi-delete
           </v-icon>
-          
+
         </div>
       </template>
       <template v-slot:bottom>
-      <div class="text-caption text-right pa-2">
-        Mostrando {{ formattedStudents.length }} registros
-      </div>
-    </template>
+        <div class="text-caption text-right pa-2">
+          Mostrando {{ formattedStudents.length }} registros
+        </div>
+      </template>
     </v-data-table>
 
     <!-- DELETE-->
@@ -64,27 +48,17 @@
           Confirmar Eliminación
         </v-card-title>
         <v-card-text>
-          ¿Estás seguro que deseas eliminar al estudiante <strong>{{ studentToDelete?.nombre }}</strong> (Matrícula: {{ studentToDelete?.matricula }})?
+          ¿Estás seguro que deseas eliminar al estudiante <strong>{{ studentToDelete?.nombre }}</strong> (Matrícula: {{
+            studentToDelete?.matricula }})?
           <br><br>
           Esta acción no se puede deshacer.
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="blue-darken-1"
-            variant="text"
-            @click="deleteDialog = false"
-            :disabled="deleting"
-          >
+          <v-btn color="blue-darken-1" variant="text" @click="deleteDialog = false" :disabled="deleting">
             Cancelar
           </v-btn>
-          <v-btn
-            color="red-darken-1"
-            variant="text"
-            @click="confirmDelete"
-            :loading="deleting"
-            :disabled="deleting"
-          >
+          <v-btn color="red-darken-1" variant="text" @click="confirmDelete" :loading="deleting" :disabled="deleting">
             Confirmar
           </v-btn>
         </v-card-actions>
@@ -97,48 +71,22 @@
         <v-card-title class="text-h5">Editar Estudiante</v-card-title>
         <v-card-text>
           <v-form ref="editForm" @submit.prevent="confirmEdit">
-            <v-text-field
-              v-model="editStudent.matricula"
-              label="Matrícula"
-              required
-              :rules="[v => !!v || 'La matrícula es requerida']"
-              class="mb-4"
-            ></v-text-field>
-            <v-text-field
-              v-model="editStudent.nombre"
-              label="Nombre"
-              required
-              :rules="[v => !!v || 'El nombre es requerido']"
-              class="mb-4"
-            ></v-text-field>
-            <v-text-field
-              v-model="editStudent.email"
-              label="Email"
-              required
-              :rules="[
-                v => !!v || 'El email es requerido',
-                v => /.+@.+\..+/.test(v) || 'El email debe ser válido'
-              ]"
-            ></v-text-field>
+            <v-text-field v-model="editStudent.matricula" label="Matrícula" required
+              :rules="[v => !!v || 'La matrícula es requerida']" class="mb-4"></v-text-field>
+            <v-text-field v-model="editStudent.nombre" label="Nombre" required
+              :rules="[v => !!v || 'El nombre es requerido']" class="mb-4"></v-text-field>
+            <v-text-field v-model="editStudent.email" label="Email" required :rules="[
+              v => !!v || 'El email es requerido',
+              v => /.+@.+\..+/.test(v) || 'El email debe ser válido'
+            ]"></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="blue-darken-1"
-            variant="text"
-            @click="editDialog = false"
-            :disabled="editing"
-          >
+          <v-btn color="blue-darken-1" variant="text" @click="editDialog = false" :disabled="editing">
             Cancelar
           </v-btn>
-          <v-btn
-            color="green-darken-1"
-            variant="text"
-            @click="confirmEdit"
-            :loading="editing"
-            :disabled="editing"
-          >
+          <v-btn color="green-darken-1" variant="text" @click="confirmEdit" :loading="editing" :disabled="editing">
             Guardar Cambios
           </v-btn>
         </v-card-actions>
@@ -151,24 +99,14 @@
         <v-card-title>Editar Estudiante (PATCH)</v-card-title>
         <v-card-text>
           <v-form ref="patchForm">
-            <v-text-field
-              v-model="patchStudent.matricula"
-              label="Matrícula"
-              :placeholder="patchStudent.matricula ? '' : 'matricula'"
-            ></v-text-field>
-            
-            <v-text-field
-              v-model="patchStudent.nombre"
-              label="Nombre"
-              :placeholder="patchStudent.nombre ? '' : 'nombre'"
-            ></v-text-field>
-            
-            <v-text-field
-              v-model="patchStudent.email"
-              label="Email"
-              type="email"
-              :placeholder="patchStudent.email ? '' : 'email'"
-            ></v-text-field>
+            <v-text-field v-model="patchStudent.matricula" label="Matrícula"
+              :placeholder="patchStudent.matricula ? '' : 'matricula'"></v-text-field>
+
+            <v-text-field v-model="patchStudent.nombre" label="Nombre"
+              :placeholder="patchStudent.nombre ? '' : 'nombre'"></v-text-field>
+
+            <v-text-field v-model="patchStudent.email" label="Email" type="email"
+              :placeholder="patchStudent.email ? '' : 'email'"></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -182,65 +120,39 @@
 
     <!-- POST -->
     <v-dialog v-model="createDialog" persistent max-width="600">
-          <v-card>
-            <v-card-title class="text-h5">Nuevo Estudiante</v-card-title>
-            <v-card-text>
-              <v-form ref="createForm" @submit.prevent="confirmCreate">
-                <v-text-field
-                  v-model="newStudent.matricula"
-                  label="Matrícula"
-                  required
-                  :rules="[v => !!v || 'La matrícula es requerida']"
-                  class="mb-4"
-                ></v-text-field>
-                
-                <v-text-field
-                  v-model="newStudent.nombre"
-                  label="Nombre"
-                  required
-                  :rules="[v => !!v || 'El nombre es requerido']"
-                  class="mb-4"
-                ></v-text-field>
-                
-                <v-text-field
-                  v-model="newStudent.email"
-                  label="Email"
-                  required
-                  :rules="[
-                    v => !!v || 'El email es requerido',
-                    v => /.+@.+\..+/.test(v) || 'El email debe ser válido'
-                  ]"
-                ></v-text-field>
-              </v-form>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="blue-darken-1"
-                variant="text"
-                @click="createDialog = false"
-                :disabled="creating"
-              >
-                Cancelar
-              </v-btn>
-              <v-btn
-                color="green-darken-1"
-                variant="text"
-                @click="confirmCreate"
-                :loading="creating"
-                :disabled="creating"
-              >
-                Crear Estudiante
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+      <v-card>
+        <v-card-title class="text-h5">Nuevo Estudiante</v-card-title>
+        <v-card-text>
+          <v-form ref="createForm" @submit.prevent="confirmCreate">
+            <v-text-field v-model="newStudent.matricula" label="Matrícula" required
+              :rules="[v => !!v || 'La matrícula es requerida']" class="mb-4"></v-text-field>
 
-        <!-- Snackbar -->
-        <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
-          {{ snackbar.message }}
-        </v-snackbar>
-      </div>
+            <v-text-field v-model="newStudent.nombre" label="Nombre" required
+              :rules="[v => !!v || 'El nombre es requerido']" class="mb-4"></v-text-field>
+
+            <v-text-field v-model="newStudent.email" label="Email" required :rules="[
+              v => !!v || 'El email es requerido',
+              v => /.+@.+\..+/.test(v) || 'El email debe ser válido'
+            ]"></v-text-field>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue-darken-1" variant="text" @click="createDialog = false" :disabled="creating">
+            Cancelar
+          </v-btn>
+          <v-btn color="green-darken-1" variant="text" @click="confirmCreate" :loading="creating" :disabled="creating">
+            Crear Estudiante
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar -->
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
+      {{ snackbar.message }}
+    </v-snackbar>
+  </div>
 </template>
 
 
@@ -253,6 +165,7 @@ const headers = [
   { title: 'Email', key: 'email' },
   { title: 'Acciones', key: 'actions', width: '150px', sortable: false }
 ];
+//tabla
 const originalStudentData = ref(null);
 const students = ref([]);
 const loading = ref(false);
@@ -266,6 +179,7 @@ const editStudent = ref({
   nombre: '',
   email: ''
 });
+//delete
 const deleting = ref(false);
 const editing = ref(false);
 const editForm = ref(null);
@@ -274,6 +188,7 @@ const snackbar = ref({
   message: '',
   color: 'success'
 });
+//patch
 const patchDialog = ref(false)
 const patching = ref(false)
 const patchStudent = ref({
@@ -282,7 +197,7 @@ const patchStudent = ref({
   email: '',
 });
 const patchForm = ref(null)
-
+//post
 const createDialog = ref(false);
 const creating = ref(false);
 const newStudent = ref({
@@ -292,46 +207,6 @@ const newStudent = ref({
 });
 const createForm = ref(null);
 
-const formattedStudents = computed(() => {
-  return students.value.map(item => ({
-    matricula: item.matricula,
-    nombre: item.nombre,
-    email: item.email
-  }));
-});
-
-const fetchStudents = async () => {
-  try {
-    loading.value = true;
-    error.value = null;
-    noDataMessage.value = 'Cargando estudiantes...';
-    students.value = [];
-    
-    const response = await fetch('https://localhost:9000/estudiantes');
-    
-    if (!response.ok) {
-      throw new Error(response.status === 404 
-        ? 'No se encontraron estudiantes' 
-        : 'Error al cargar datos de estudiantes');
-    }
-    
-    const data = await response.json();
-    students.value = data.map(item => ({
-      matricula: item.matricula,
-      nombre: item.persona.nombre,
-      email: item.persona.email
-    }));
-    
-    noDataMessage.value = 'No hay estudiantes disponibles';
-    
-  } catch (err) {
-    error.value = err.message;
-    noDataMessage.value = err.message;
-    students.value = [];
-  } finally {
-    loading.value = false;
-  }
-};
 
 //DELETE
 const openDeleteDialog = (student) => {
@@ -352,14 +227,14 @@ const confirmDelete = async () => {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        errorData.message || 
+        errorData.message ||
         `Error ${response.status}: ${response.statusText}`
       );
     }
 
     showSnackbar('Estudiante eliminado correctamente', 'success');
     await fetchStudents();
-    
+
   } catch (err) {
     console.error('Error al eliminar:', err);
     showSnackbar(`Error al eliminar: ${err.message}`, 'error');
@@ -382,13 +257,13 @@ const openEditDialog = async (student) => {
     loading.value = true;
 
     editStudent.value = {
-      matricula: '',  
-      nombre: '',     
-      email: ''       
+      matricula: '',
+      nombre: '',
+      email: ''
     };
 
-    originalStudentData.value = { 
-      matricula: student.matricula 
+    originalStudentData.value = {
+      matricula: student.matricula
     };
 
     editDialog.value = true;
@@ -447,7 +322,7 @@ const confirmEdit = async () => {
     console.log('Datos actualizados:', updatedData);
 
     showSnackbar('Estudiante actualizado correctamente', 'success');
-    await fetchStudents(); 
+    await fetchStudents();
     editDialog.value = false;
   } catch (error) {
     console.error('Error completo:', error);
@@ -464,7 +339,7 @@ function openPatchDialog(student) {
     nombre: student.nombre,
     email: student.email
   };
-  originalStudentData.value = { ...student }; 
+  originalStudentData.value = { ...student };
   patchDialog.value = true;
 }
 const confirmPatch = async () => {
@@ -569,7 +444,7 @@ const confirmCreate = async () => {
     console.log('[DEBUG] Estudiante creado:', createdData);
 
     showSnackbar('Estudiante creado exitosamente', 'success');
-    await fetchStudents(); 
+    await fetchStudents();
     createDialog.value = false;
   } catch (error) {
     console.error('[ERROR CREATE]', error);
@@ -579,6 +454,47 @@ const confirmCreate = async () => {
   }
 };
 
+//extras
+const formattedStudents = computed(() => {
+  return students.value.map(item => ({
+    matricula: item.matricula,
+    nombre: item.nombre,
+    email: item.email
+  }));
+});
+
+const fetchStudents = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+    noDataMessage.value = 'Cargando estudiantes...';
+    students.value = [];
+
+    const response = await fetch('https://localhost:9000/estudiantes');
+
+    if (!response.ok) {
+      throw new Error(response.status === 404
+        ? 'No se encontraron estudiantes'
+        : 'Error al cargar datos de estudiantes');
+    }
+
+    const data = await response.json();
+    students.value = data.map(item => ({
+      matricula: item.matricula,
+      nombre: item.persona.nombre,
+      email: item.persona.email
+    }));
+
+    noDataMessage.value = 'No hay estudiantes disponibles';
+
+  } catch (err) {
+    error.value = err.message;
+    noDataMessage.value = err.message;
+    students.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
 
 fetchStudents();
 </script>

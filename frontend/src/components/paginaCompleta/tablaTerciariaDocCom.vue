@@ -4,13 +4,8 @@
   </v-btn>
 
   <!-- Tabla -->
-  <v-data-table
-    :headers="headers"
-    :items="asignaturas"
-    :loading="loading"
-    hide-default-footer
-    class="inscripciones-table"
-  >
+  <v-data-table :headers="headers" :items="asignaturas" :loading="loading" hide-default-footer
+    class="inscripciones-table">
     <template v-slot:loading>
       <v-progress-linear indeterminate color="primary" />
     </template>
@@ -22,17 +17,17 @@
     </template>
 
     <template #item.acciones="{ item }">
-  <v-icon color="blue" class="mr-2" @click="abrirDialogoEditar(item)" style="cursor: pointer;">
-    mdi-pencil
-  </v-icon>
-  <v-icon color="orange" class="mr-2" @click="abrirDialogoPatch(item)" style="cursor: pointer;">
-  mdi-pencil
-</v-icon>
+      <v-icon color="blue" class="mr-2" @click="abrirDialogoEditar(item)" style="cursor: pointer;">
+        mdi-pencil
+      </v-icon>
+      <v-icon color="orange" class="mr-2" @click="abrirDialogoPatch(item)" style="cursor: pointer;">
+        mdi-pencil
+      </v-icon>
 
-  <v-icon color="red" class="mr-2" @click="abrirDialogoEliminar(item)" style="cursor: pointer;">
-    mdi-delete
-  </v-icon>
-</template>
+      <v-icon color="red" class="mr-2" @click="abrirDialogoEliminar(item)" style="cursor: pointer;">
+        mdi-delete
+      </v-icon>
+    </template>
 
   </v-data-table>
 
@@ -50,7 +45,8 @@
         <v-btn variant="text" color="blue-darken-1" @click="deleteDialog = false" :disabled="deleting">
           Cancelar
         </v-btn>
-        <v-btn variant="text" color="red-darken-1" @click="confirmarEliminacion" :loading="deleting" :disabled="deleting">
+        <v-btn variant="text" color="red-darken-1" @click="confirmarEliminacion" :loading="deleting"
+          :disabled="deleting">
           Confirmar
         </v-btn>
       </v-card-actions>
@@ -62,14 +58,8 @@
     <v-card>
       <v-card-title class="text-h5">Agregar Asignatura</v-card-title>
       <v-card-text>
-        <v-select
-  v-model="asignaturaSeleccionada"
-  :items="todasAsignaturas"
-  item-title="display"
-  item-value="clave"
-  label="Selecciona una asignatura"
-  :return-object="false"
-/>
+        <v-select v-model="asignaturaSeleccionada" :items="todasAsignaturas" item-title="display" item-value="clave"
+          label="Selecciona una asignatura" :return-object="false" />
 
 
       </v-card-text>
@@ -78,79 +68,60 @@
         <v-btn variant="text" color="blue-darken-1" @click="addDialog = false" :disabled="agregando">
           Cancelar
         </v-btn>
-        <v-btn variant="text" color="green-darken-1" @click="confirmarAgregar" :loading="agregando" :disabled="!asignaturaSeleccionada || agregando">
+        <v-btn variant="text" color="green-darken-1" @click="confirmarAgregar" :loading="agregando"
+          :disabled="!asignaturaSeleccionada || agregando">
           Confirmar
         </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
   <!-- PUT -->
-<v-dialog v-model="editDialog" persistent max-width="500">
-  <v-card>
-    <v-card-title class="text-h5">Editar Contrato</v-card-title>
-    <v-card-text>
+  <v-dialog v-model="editDialog" persistent max-width="500">
+    <v-card>
+      <v-card-title class="text-h5">Editar Contrato</v-card-title>
       <v-card-text>
-  <v-text-field
-  v-model="formularioEdicion.nuevoNumEmpleado"
-  label="Nuevo número de empleado"
-  type="number"
-  :error="!!erroresEdicion.nuevoNumEmpleado"
-  :error-messages="erroresEdicion.nuevoNumEmpleado"
-/>
+        <v-card-text>
+          <v-text-field v-model="formularioEdicion.nuevoNumEmpleado" label="Nuevo número de empleado" type="number"
+            :error="!!erroresEdicion.nuevoNumEmpleado" :error-messages="erroresEdicion.nuevoNumEmpleado" />
 
-<v-text-field
-  v-model="formularioEdicion.nuevaClave"
-  label="Nueva clave de asignatura"
-  type="number"
-  :error="!!erroresEdicion.nuevaClave"
-  :error-messages="erroresEdicion.nuevaClave"
-/>
+          <v-text-field v-model="formularioEdicion.nuevaClave" label="Nueva clave de asignatura" type="number"
+            :error="!!erroresEdicion.nuevaClave" :error-messages="erroresEdicion.nuevaClave" />
 
-</v-card-text>
+        </v-card-text>
 
-    </v-card-text>
-    <v-card-actions>
-      <v-spacer />
-      <v-btn variant="text" color="blue-darken-1" @click="editDialog = false" :disabled="editando">
-        Cancelar
-      </v-btn>
-      <v-btn variant="text" color="green-darken-1" @click="confirmarEdicion" :loading="editando" :disabled="editando">
-        Confirmar
-      </v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
-<!-- PATCH -->
-<v-dialog v-model="patchDialog" persistent max-width="500">
-  <v-card>
-    <v-card-title class="text-h5">Editar Contrato (PATCH)</v-card-title>
-    <v-card-text>
-      <v-text-field
-        v-model="formularioPatch.nuevoNumEmpleado"
-        label="Nuevo número de empleado"
-        type="number"
-        :error="!!erroresPatch.nuevoNumEmpleado"
-        :error-messages="erroresPatch.nuevoNumEmpleado"
-      />
-      <v-text-field
-        v-model="formularioPatch.nuevaClave"
-        label="Nueva clave de asignatura"
-        type="number"
-        :error="!!erroresPatch.nuevaClave"
-        :error-messages="erroresPatch.nuevaClave"
-      />
-    </v-card-text>
-    <v-card-actions>
-      <v-spacer />
-      <v-btn variant="text" color="blue-darken-1" @click="patchDialog = false" :disabled="editando">
-        Cancelar
-      </v-btn>
-      <v-btn variant="text" color="orange-darken-1" @click="confirmarPatch" :loading="editando" :disabled="editando">
-        Confirmar
-      </v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" color="blue-darken-1" @click="editDialog = false" :disabled="editando">
+          Cancelar
+        </v-btn>
+        <v-btn variant="text" color="green-darken-1" @click="confirmarEdicion" :loading="editando" :disabled="editando">
+          Confirmar
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+  <!-- PATCH -->
+  <v-dialog v-model="patchDialog" persistent max-width="500">
+    <v-card>
+      <v-card-title class="text-h5">Editar Contrato (PATCH)</v-card-title>
+      <v-card-text>
+        <v-text-field v-model="formularioPatch.nuevoNumEmpleado" label="Nuevo número de empleado" type="number"
+          :error="!!erroresPatch.nuevoNumEmpleado" :error-messages="erroresPatch.nuevoNumEmpleado" />
+        <v-text-field v-model="formularioPatch.nuevaClave" label="Nueva clave de asignatura" type="number"
+          :error="!!erroresPatch.nuevaClave" :error-messages="erroresPatch.nuevaClave" />
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" color="blue-darken-1" @click="patchDialog = false" :disabled="editando">
+          Cancelar
+        </v-btn>
+        <v-btn variant="text" color="orange-darken-1" @click="confirmarPatch" :loading="editando" :disabled="editando">
+          Confirmar
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
 </template>
 
@@ -212,6 +183,7 @@ const erroresPatch = ref({
   nuevaClave: ''
 });
 
+//PATCH
 const abrirDialogoPatch = (asignatura) => {
   formularioPatch.value = {
     clave: asignatura.asignaturaId,
@@ -270,7 +242,6 @@ const confirmarPatch = async () => {
   }
 };
 
-
 // DELETE
 const abrirDialogoEliminar = (asignatura) => {
   asignaturaAEliminar.value = asignatura;
@@ -317,7 +288,7 @@ const abrirDialogoAgregar = async () => {
 
   try {
     const res = await fetch('https://localhost:9000/asignaturas');
-    const result = await res.json();  
+    const result = await res.json();
 
     todasAsignaturas.value = result.map(a => ({
       ...a,
@@ -339,7 +310,7 @@ const confirmarAgregar = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         numEmpleado: props.numEmpleado,
-    clave: asignaturaSeleccionada.value, 
+        clave: asignaturaSeleccionada.value,
       })
     });
 
@@ -360,7 +331,7 @@ const confirmarAgregar = async () => {
 // PUT
 const abrirDialogoEditar = (asignatura) => {
   formularioEdicion.value = {
-    clave: asignatura.asignaturaId, 
+    clave: asignatura.asignaturaId,
     nuevoNumEmpleado: null,
     nuevaClave: null
   };

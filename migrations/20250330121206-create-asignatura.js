@@ -10,7 +10,7 @@ module.exports = {
       },
       clave: {
         type: Sequelize.INTEGER,
-        unique: true, 
+        unique: true,
         allowNull: false
       },
       nombre: {

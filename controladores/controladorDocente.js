@@ -70,10 +70,10 @@ module.exports = {
     try {
       const docentes = await Docente.findAll({
         include: [
-          { 
-            model: Persona, 
+          {
+            model: Persona,
             as: 'persona',
-            attributes: ['id', 'nombre', 'email'] 
+            attributes: ['id', 'nombre', 'email']
           },
           {
             model: CategoriaEmpleado,
@@ -83,427 +83,426 @@ module.exports = {
         ],
         order: [['numEmpleado', 'ASC']]
       });
-  
+
       res.json(docentes);
     } catch (error) {
       console.error('Error al obtener docentes:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Error al obtener docentes',
         detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   },
 
-  
-async obtenerDocente(req, res) {
-  try {
-    const { id } = req.params;
-    
-    if (!id || isNaN(id)) {
-      return res.status(400).json({ error: 'ID inválido' });
-    }
 
-    const docente = await Docente.findOne({
-      where: { numEmpleado: id }, 
-      include: [
-        { 
-          model: Persona, 
-          as: 'persona',
-          attributes: ['id', 'nombre', 'email']
-        },
-        {
-          model: CategoriaEmpleado,
-          as: 'categoria',
-          attributes: ['clave', 'nombre']
-        },
-        {
-          model: Asignatura,
-          as: 'asignaturas',
-          through: { attributes: [] },
-          attributes: ['clave', 'nombre', 'creditos']
-        }
-      ]
-    });
+  async obtenerDocente(req, res) {
+    try {
+      const { id } = req.params;
 
-    if (!docente) {
-      return res.status(404).json({ error: 'Docente no encontrado' });
-    }
+      if (!id || isNaN(id)) {
+        return res.status(400).json({ error: 'ID inválido' });
+      }
 
-    res.json(docente);
-  } catch (error) {
-    console.error('Error al obtener docente:', error);
-    
-    const status = error.name === 'SequelizeDatabaseError' ? 400 : 500;
-    const errorResponse = {
-      error: status === 400 ? 'Error en la consulta' : 'Error al obtener docente'
-    };
-    
-    if (process.env.NODE_ENV === 'development') {
-      errorResponse.detalle = {
-        message: error.message,
-        stack: error.stack,
-        sql: error.sql
+      const docente = await Docente.findOne({
+        where: { numEmpleado: id },
+        include: [
+          {
+            model: Persona,
+            as: 'persona',
+            attributes: ['id', 'nombre', 'email']
+          },
+          {
+            model: CategoriaEmpleado,
+            as: 'categoria',
+            attributes: ['clave', 'nombre']
+          },
+          {
+            model: Asignatura,
+            as: 'asignaturas',
+            through: { attributes: [] },
+            attributes: ['clave', 'nombre', 'creditos']
+          }
+        ]
+      });
+
+      if (!docente) {
+        return res.status(404).json({ error: 'Docente no encontrado' });
+      }
+
+      res.json(docente);
+    } catch (error) {
+      console.error('Error al obtener docente:', error);
+
+      const status = error.name === 'SequelizeDatabaseError' ? 400 : 500;
+      const errorResponse = {
+        error: status === 400 ? 'Error en la consulta' : 'Error al obtener docente'
       };
-    }
-    
-    res.status(status).json(errorResponse);
-  }
-},
 
-async actualizarDocentePUT(req, res) {
-  const transaction = await sequelize.transaction();
-  
-  try {
+      if (process.env.NODE_ENV === 'development') {
+        errorResponse.detalle = {
+          message: error.message,
+          stack: error.stack,
+          sql: error.sql
+        };
+      }
+
+      res.status(status).json(errorResponse);
+    }
+  },
+
+  async actualizarDocentePUT(req, res) {
+    const transaction = await sequelize.transaction();
+
+    try {
       const { numEmpleado } = req.params;
       const { nuevoNumEmpleado, categoriaId, persona } = req.body;
 
       if (!nuevoNumEmpleado || !categoriaId || !persona?.nombre) {
-          await transaction.rollback();
-          return res.status(400).json({
-              error: 'Datos incompletos',
-              detalles: {
-                  faltantes: [
-                      ...(!nuevoNumEmpleado ? ['nuevoNumEmpleado'] : []),
-                      ...(!categoriaId ? ['categoriaId'] : []),
-                      ...(!persona?.nombre ? ['persona.nombre'] : [])
-                  ]
-              }
-          });
+        await transaction.rollback();
+        return res.status(400).json({
+          error: 'Datos incompletos',
+          detalles: {
+            faltantes: [
+              ...(!nuevoNumEmpleado ? ['nuevoNumEmpleado'] : []),
+              ...(!categoriaId ? ['categoriaId'] : []),
+              ...(!persona?.nombre ? ['persona.nombre'] : [])
+            ]
+          }
+        });
       }
 
       const docente = await Docente.findOne({
-          where: { numEmpleado },
-          include: [{ model: Persona, as: 'persona' }],
-          transaction,
-          lock: true
+        where: { numEmpleado },
+        include: [{ model: Persona, as: 'persona' }],
+        transaction,
+        lock: true
       });
 
       if (!docente) {
-          await transaction.rollback();
-          return res.status(404).json({ 
-              error: 'Docente no encontrado',
-              numEmpleadoBuscado: numEmpleado
-          });
+        await transaction.rollback();
+        return res.status(404).json({
+          error: 'Docente no encontrado',
+          numEmpleadoBuscado: numEmpleado
+        });
       }
 
       if (nuevoNumEmpleado !== numEmpleado) {
-          const existe = await Docente.findOne({
-              where: { numEmpleado: nuevoNumEmpleado },
-              transaction
-          });
+        const existe = await Docente.findOne({
+          where: { numEmpleado: nuevoNumEmpleado },
+          transaction
+        });
 
-          if (existe) {
-              await transaction.rollback();
-              return res.status(409).json({
-                  error: 'Número de empleado en uso',
-                  conflictoCon: existe.persona?.nombre || 'Sin nombre registrado'
-              });
-          }
+        if (existe) {
+          await transaction.rollback();
+          return res.status(409).json({
+            error: 'Número de empleado en uso',
+            conflictoCon: existe.persona?.nombre || 'Sin nombre registrado'
+          });
+        }
       }
 
       await sequelize.query(
-          `UPDATE Docentes SET numEmpleado = ?, categoriaId = ? WHERE numEmpleado = ?`,
-          {
-              replacements: [nuevoNumEmpleado, categoriaId, numEmpleado],
-              transaction
-          }
+        `UPDATE Docentes SET numEmpleado = ?, categoriaId = ? WHERE numEmpleado = ?`,
+        {
+          replacements: [nuevoNumEmpleado, categoriaId, numEmpleado],
+          transaction
+        }
       );
 
       if (nuevoNumEmpleado !== numEmpleado) {
-          await sequelize.query(
-              `UPDATE Contratos SET docenteId = ? WHERE docenteId = ?`,
-              {
-                  replacements: [nuevoNumEmpleado, numEmpleado],
-                  transaction
-              }
-          );
+        await sequelize.query(
+          `UPDATE Contratos SET docenteId = ? WHERE docenteId = ?`,
+          {
+            replacements: [nuevoNumEmpleado, numEmpleado],
+            transaction
+          }
+        );
       }
 
       await docente.persona.update({
-          nombre: persona.nombre,
-          email: persona.email || docente.persona.email
+        nombre: persona.nombre,
+        email: persona.email || docente.persona.email
       }, { transaction });
 
       await transaction.commit();
 
       const docenteActualizado = await Docente.findOne({
-          where: { numEmpleado: nuevoNumEmpleado },
-          include: [
-              { model: Persona, as: 'persona' },
-              { model: CategoriaEmpleado, as: 'categoria' }
-          ]
+        where: { numEmpleado: nuevoNumEmpleado },
+        include: [
+          { model: Persona, as: 'persona' },
+          { model: CategoriaEmpleado, as: 'categoria' }
+        ]
       });
 
       return res.json({
-          success: true,
-          message: 'Docente actualizado exitosamente',
-          data: docenteActualizado
+        success: true,
+        message: 'Docente actualizado exitosamente',
+        data: docenteActualizado
       });
 
-  } catch (error) {
+    } catch (error) {
       await transaction.rollback();
       console.error('Error detallado:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          original: error.original || null
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        original: error.original || null
       });
 
       if (error.name === 'SequelizeForeignKeyConstraintError') {
-          return res.status(400).json({
-              error: 'Error de integridad de datos',
-              mensaje: 'No se pudo completar la actualización por restricciones de la base de datos',
-              ...(process.env.NODE_ENV === 'development' && {
-                  detalle: error.message,
-                  solucion: 'Verifique que todas las referencias existan antes de actualizar'
-              })
-          });
+        return res.status(400).json({
+          error: 'Error de integridad de datos',
+          mensaje: 'No se pudo completar la actualización por restricciones de la base de datos',
+          ...(process.env.NODE_ENV === 'development' && {
+            detalle: error.message,
+            solucion: 'Verifique que todas las referencias existan antes de actualizar'
+          })
+        });
       }
 
       return res.status(500).json({
-          error: 'Error interno en el servidor',
-          ...(process.env.NODE_ENV === 'development' && {
-              detalle: error.message
-          })
+        error: 'Error interno en el servidor',
+        ...(process.env.NODE_ENV === 'development' && {
+          detalle: error.message
+        })
       });
-  }
-}
-,
-  
-async modificaDocentePATCH(req, res) {
+    }
+  },
+
+  async modificaDocentePATCH(req, res) {
     const transaction = await sequelize.transaction();
     try {
-        const { numEmpleado } = req.params;
-        const { nuevoNumEmpleado, categoriaId, persona } = req.body;
+      const { numEmpleado } = req.params;
+      const { nuevoNumEmpleado, categoriaId, persona } = req.body;
 
-        if (!nuevoNumEmpleado && !categoriaId && !persona) {
-            await transaction.rollback();
-            return res.status(400).json({
-                error: 'Debe proporcionar al menos un campo para actualizar',
-                camposDisponibles: ['nuevoNumEmpleado', 'categoriaId', 'persona']
-            });
+      if (!nuevoNumEmpleado && !categoriaId && !persona) {
+        await transaction.rollback();
+        return res.status(400).json({
+          error: 'Debe proporcionar al menos un campo para actualizar',
+          camposDisponibles: ['nuevoNumEmpleado', 'categoriaId', 'persona']
+        });
+      }
+
+      const docente = await Docente.findOne({
+        where: { numEmpleado },
+        include: [{ model: Persona, as: 'persona' }],
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+
+      if (!docente) {
+        await transaction.rollback();
+        return res.status(404).json({
+          error: 'Docente no encontrado',
+          numEmpleadoBuscado: numEmpleado
+        });
+      }
+
+      let numeroFinal = numEmpleado;
+
+      if (nuevoNumEmpleado != null && nuevoNumEmpleado !== '') {
+        if (!/^\d+$/.test(nuevoNumEmpleado)) {
+          await transaction.rollback();
+          return res.status(400).json({
+            error: 'Formato inválido',
+            detalle: 'El número de empleado debe contener solo dígitos'
+          });
         }
 
-        const docente = await Docente.findOne({
-            where: { numEmpleado },
-            include: [{ model: Persona, as: 'persona' }],
-            transaction,
-            lock: transaction.LOCK.UPDATE
+        const existeNumero = await Docente.findOne({
+          where: { numEmpleado: nuevoNumEmpleado },
+          transaction
         });
 
-        if (!docente) {
-            await transaction.rollback();
-            return res.status(404).json({ 
-                error: 'Docente no encontrado',
-                numEmpleadoBuscado: numEmpleado
-            });
+        // Solo hay conflicto si el número existe y pertenece a otro docente
+        if (existeNumero && existeNumero.numEmpleado !== numEmpleado) {
+          await transaction.rollback();
+          return res.status(409).json({
+            error: 'Número de empleado en uso',
+            conflictoCon: existeNumero.persona?.nombre || 'Docente sin nombre registrado'
+          });
         }
 
-        let numeroFinal = numEmpleado;
-
-        if (nuevoNumEmpleado != null && nuevoNumEmpleado !== '') {
-            if (!/^\d+$/.test(nuevoNumEmpleado)) {
-                await transaction.rollback();
-                return res.status(400).json({
-                    error: 'Formato inválido',
-                    detalle: 'El número de empleado debe contener solo dígitos'
-                });
-            }
-
-            const existeNumero = await Docente.findOne({
-                where: { numEmpleado: nuevoNumEmpleado },
-                transaction
-            });
-
-            // Solo hay conflicto si el número existe y pertenece a otro docente
-            if (existeNumero && existeNumero.numEmpleado !== numEmpleado) {
-                await transaction.rollback();
-                return res.status(409).json({
-                    error: 'Número de empleado en uso',
-                    conflictoCon: existeNumero.persona?.nombre || 'Docente sin nombre registrado'
-                });
-            }
-
-            // Aunque sea el mismo número, se actualizará por consistencia
-            await sequelize.query(
-                `UPDATE Docentes SET numEmpleado = ? WHERE numEmpleado = ?`,
-                {
-                    replacements: [nuevoNumEmpleado, numEmpleado],
-                    transaction
-                }
-            );
-
-            await sequelize.models.Contrato.update(
-                { docenteId: nuevoNumEmpleado },
-                { 
-                    where: { docenteId: numEmpleado },
-                    transaction,
-                    individualHooks: true
-                }
-            );
-
-            numeroFinal = nuevoNumEmpleado;
-        }
-
-        if (categoriaId) {
-            await sequelize.query(
-                `UPDATE Docentes SET categoriaId = ? WHERE numEmpleado = ?`,
-                {
-                    replacements: [categoriaId, numeroFinal],
-                    transaction
-                }
-            );
-        }
-
-        if (persona && Object.keys(persona).length > 0) {
-            const updateData = {};
-            if (persona.nombre) updateData.nombre = persona.nombre;
-            if (persona.email) updateData.email = persona.email;
-
-            if (Object.keys(updateData).length > 0) {
-                await docente.persona.update(updateData, { transaction });
-            }
-        }
-
-        const docenteActualizado = await Docente.findByPk(numeroFinal, {
-            include: [
-                { model: Persona, as: 'persona' },
-                { model: CategoriaEmpleado, as: 'categoria' }
-            ],
+        // Aunque sea el mismo número, se actualizará por consistencia
+        await sequelize.query(
+          `UPDATE Docentes SET numEmpleado = ? WHERE numEmpleado = ?`,
+          {
+            replacements: [nuevoNumEmpleado, numEmpleado],
             transaction
-        });
+          }
+        );
 
-        await transaction.commit();
+        await sequelize.models.Contrato.update(
+          { docenteId: nuevoNumEmpleado },
+          {
+            where: { docenteId: numEmpleado },
+            transaction,
+            individualHooks: true
+          }
+        );
 
-        return res.json({
-            success: true,
-            message: 'Docente actualizado exitosamente',
-            cambios: {
-                ...(nuevoNumEmpleado ? { numEmpleado: { anterior: numEmpleado, nuevo: nuevoNumEmpleado } } : {}),
-                ...(categoriaId ? { categoriaId } : {}),
-                ...(persona && Object.keys(persona).length > 0 ? { persona: Object.keys(persona) } : {})
-            },
-            data: docenteActualizado
-        });
+        numeroFinal = nuevoNumEmpleado;
+      }
+
+      if (categoriaId) {
+        await sequelize.query(
+          `UPDATE Docentes SET categoriaId = ? WHERE numEmpleado = ?`,
+          {
+            replacements: [categoriaId, numeroFinal],
+            transaction
+          }
+        );
+      }
+
+      if (persona && Object.keys(persona).length > 0) {
+        const updateData = {};
+        if (persona.nombre) updateData.nombre = persona.nombre;
+        if (persona.email) updateData.email = persona.email;
+
+        if (Object.keys(updateData).length > 0) {
+          await docente.persona.update(updateData, { transaction });
+        }
+      }
+
+      const docenteActualizado = await Docente.findByPk(numeroFinal, {
+        include: [
+          { model: Persona, as: 'persona' },
+          { model: CategoriaEmpleado, as: 'categoria' }
+        ],
+        transaction
+      });
+
+      await transaction.commit();
+
+      return res.json({
+        success: true,
+        message: 'Docente actualizado exitosamente',
+        cambios: {
+          ...(nuevoNumEmpleado ? { numEmpleado: { anterior: numEmpleado, nuevo: nuevoNumEmpleado } } : {}),
+          ...(categoriaId ? { categoriaId } : {}),
+          ...(persona && Object.keys(persona).length > 0 ? { persona: Object.keys(persona) } : {})
+        },
+        data: docenteActualizado
+      });
 
     } catch (error) {
-        await transaction.rollback();
-        console.error('Error en modificaDocentePATCH:', error);
-        return res.status(500).json({
-            error: 'Error al actualizar docente',
-            detalle: process.env.NODE_ENV === 'development' ? {
-                message: error.message,
-                stack: error.stack
-            } : undefined
-        });
+      await transaction.rollback();
+      console.error('Error en modificaDocentePATCH:', error);
+      return res.status(500).json({
+        error: 'Error al actualizar docente',
+        detalle: process.env.NODE_ENV === 'development' ? {
+          message: error.message,
+          stack: error.stack
+        } : undefined
+      });
     }
-},
+  },
 
   async eliminarDocente(req, res) {
     const transaction = await sequelize.transaction();
     try {
-        const { id } = req.params;
+      const { id } = req.params;
 
-        const docente = await Docente.findByPk(id, {
-            include: [{
-                model: Persona,
-                as: 'persona',
-                paranoid: false 
-            }],
-            transaction
-        });
+      const docente = await Docente.findByPk(id, {
+        include: [{
+          model: Persona,
+          as: 'persona',
+          paranoid: false
+        }],
+        transaction
+      });
 
-        if (!docente) {
-            await transaction.rollback();
-            return res.status(404).json({ error: 'Docente no encontrado' });
-        }
-
-        await Contrato.destroy({
-            where: { docenteId: docente.numEmpleado },
-            transaction
-        });
-
-        await docente.destroy({
-            force: true, 
-            transaction
-        });
-
-        if (docente.persona) {
-            await docente.persona.destroy({
-                force: true, 
-                transaction
-            });
-        }
-
-        await transaction.commit();
-        return res.json({ 
-            mensaje: 'Docente, contratos y persona asociada eliminados permanentemente',
-            detalles: {
-                numEmpleado: docente.numEmpleado,
-                personaId: docente.personaId
-            }
-        });
-    } catch (error) {
+      if (!docente) {
         await transaction.rollback();
-        console.error('Error al eliminar docente:', error);
-        return res.status(500).json({ 
-            error: 'Error al eliminar docente',
-            detalle: process.env.NODE_ENV === 'development' ? {
-                message: error.message,
-                stack: error.stack
-            } : undefined
+        return res.status(404).json({ error: 'Docente no encontrado' });
+      }
+
+      await Contrato.destroy({
+        where: { docenteId: docente.numEmpleado },
+        transaction
+      });
+
+      await docente.destroy({
+        force: true,
+        transaction
+      });
+
+      if (docente.persona) {
+        await docente.persona.destroy({
+          force: true,
+          transaction
         });
-    }
-},
+      }
 
-async obtenerContratosDeDocente(req, res) {
-  try {
-    const { docenteId } = req.params;
-
-    const contratos = await Contrato.findAll({
-      where: { docenteId },
-      include: [
-        {
-          model: Asignatura,
-          as: 'asignatura',
-          attributes: ['id', 'clave', 'nombre', 'creditos']
-        },
-        {
-          model: Docente,
-          as: 'docente',
-          attributes: ['numEmpleado'],
-          include: [{
-            model: Persona,
-            as: 'persona',
-            attributes: ['nombre', 'email']
-          }]
+      await transaction.commit();
+      return res.json({
+        mensaje: 'Docente, contratos y persona asociada eliminados permanentemente',
+        detalles: {
+          numEmpleado: docente.numEmpleado,
+          personaId: docente.personaId
         }
-      ]
-    });
-
-    if (contratos.length === 0) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'El docente no tiene contratos registrados.'
+      });
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error al eliminar docente:', error);
+      return res.status(500).json({
+        error: 'Error al eliminar docente',
+        detalle: process.env.NODE_ENV === 'development' ? {
+          message: error.message,
+          stack: error.stack
+        } : undefined
       });
     }
+  },
 
-    res.json({
-      status: 'success',
-      data: contratos.map(c => ({
-        id: c.id,
-        fechaInicio: c.fechaInicio, 
-        fechaFin: c.fechaFin,       
-        asignatura: c.asignatura,
-        docente: c.docente
-      })),
-      count: contratos.length
-    });
+  async obtenerContratosDeDocente(req, res) {
+    try {
+      const { docenteId } = req.params;
 
-  } catch (error) {
-    handleError(res, error, 'obtener contratos del docente');
-  }
-},
+      const contratos = await Contrato.findAll({
+        where: { docenteId },
+        include: [
+          {
+            model: Asignatura,
+            as: 'asignatura',
+            attributes: ['id', 'clave', 'nombre', 'creditos']
+          },
+          {
+            model: Docente,
+            as: 'docente',
+            attributes: ['numEmpleado'],
+            include: [{
+              model: Persona,
+              as: 'persona',
+              attributes: ['nombre', 'email']
+            }]
+          }
+        ]
+      });
+
+      if (contratos.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'El docente no tiene contratos registrados.'
+        });
+      }
+
+      res.json({
+        status: 'success',
+        data: contratos.map(c => ({
+          id: c.id,
+          fechaInicio: c.fechaInicio,
+          fechaFin: c.fechaFin,
+          asignatura: c.asignatura,
+          docente: c.docente
+        })),
+        count: contratos.length
+      });
+
+    } catch (error) {
+      handleError(res, error, 'obtener contratos del docente');
+    }
+  },
 
   async asignarAsignatura(req, res) {
     const transaction = await sequelize.transaction();
@@ -524,7 +523,7 @@ async obtenerContratosDeDocente(req, res) {
       }
 
       const contratoExistente = await Contrato.findOne({
-        where: { 
+        where: {
           docenteId: docente.numEmpleado,
           asignaturaId
         },
@@ -547,7 +546,7 @@ async obtenerContratosDeDocente(req, res) {
     } catch (error) {
       await transaction.rollback();
       console.error('Error al asignar asignatura:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Error al asignar asignatura',
         detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
       });

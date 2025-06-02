@@ -7,14 +7,14 @@ module.exports = (sequelize, DataTypes) => {
       Persona.hasOne(models.Estudiante, {
         foreignKey: 'personaId',
         as: 'estudiante',
-        onDelete: 'CASCADE' 
-    });
-    
-    Persona.hasOne(models.Docente, {
+        onDelete: 'CASCADE'
+      });
+
+      Persona.hasOne(models.Docente, {
         foreignKey: 'personaId',
         as: 'docente',
-        onDelete: 'CASCADE' 
-    });
+        onDelete: 'CASCADE'
+      });
     }
   }
 

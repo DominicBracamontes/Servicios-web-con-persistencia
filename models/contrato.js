@@ -5,19 +5,19 @@ module.exports = (sequelize, DataTypes) => {
   class Contrato extends Model {
     static associate(models) {
       Contrato.belongsTo(models.Docente, {
-        foreignKey: 'docenteId', 
-        targetKey: 'numEmpleado', 
+        foreignKey: 'docenteId',
+        targetKey: 'numEmpleado',
         as: 'docente',
-         onDelete: 'CASCADE', 
-      onUpdate: 'CASCADE'
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       });
-      
+
       Contrato.belongsTo(models.Asignatura, {
-        foreignKey: 'asignaturaId', 
-        targetKey: 'clave', 
+        foreignKey: 'asignaturaId',
+        targetKey: 'clave',
         as: 'asignatura',
-        onDelete: 'CASCADE', 
-      onUpdate: 'CASCADE'
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       });
     }
   }
@@ -28,21 +28,21 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       references: {
         model: 'Docentes',
-        key: 'numEmpleado', 
-        onDelete: 'CASCADE', 
-      onUpdate: 'CASCADE'
+        key: 'numEmpleado',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       }
-      
+
     },
-    asignaturaId: { 
+    asignaturaId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { 
+      references: {
         model: 'Asignaturas',
         key: 'clave',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
-      
+
       }
     }
   }, {
@@ -54,12 +54,12 @@ module.exports = (sequelize, DataTypes) => {
     },
     indexes: [
       {
-        unique: true, 
-        fields: ['docenteId', 'asignaturaId'], 
+        unique: true,
+        fields: ['docenteId', 'asignaturaId'],
       }
     ],
     timestamps: true,
-    paranoid: false 
+    paranoid: false
   });
 
   return Contrato;

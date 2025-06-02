@@ -7,23 +7,23 @@ module.exports = (sequelize, DataTypes) => {
 
       this.hasMany(models.Inscripcion, {
         foreignKey: 'asignaturaId',
-        as: 'inscripciones' 
+        as: 'inscripciones'
       });
       this.belongsToMany(models.Estudiante, {
         through: 'Inscripciones',
         foreignKey: 'asignaturaId',
         otherKey: 'estudianteId',
         as: 'estudiantes',
-        onUpdate: 'CASCADE',  
+        onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       });
-      
+
       this.belongsToMany(models.Docente, {
         through: 'Contratos',
         foreignKey: 'asignaturaId',
         otherKey: 'docenteId',
         as: 'docentes',
-        onUpdate: 'CASCADE',  
+        onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       });
     }
@@ -32,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
   Asignatura.init({
     clave: {
       type: DataTypes.INTEGER,
-      unique: true, 
+      unique: true,
       allowNull: false
     },
     nombre: {

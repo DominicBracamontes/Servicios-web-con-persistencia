@@ -2,7 +2,7 @@
   <v-app>
     <AppBar @toggle-drawer="drawer = !drawer" />
     <AppDrawer v-model="drawer" />
-      <v-main :style="{'margin-left': drawer ? '0px' : '64px', 'transition': 'margin-left 0.3s ease'}">
+    <v-main :style="{ 'margin-left': drawer ? '0px' : '64px', 'transition': 'margin-left 0.3s ease' }">
       <v-container fluid class="pa-4">
         <v-row class="align-center">
           <!-- <v-col class="flex-grow-0 pr-2">
@@ -16,10 +16,7 @@
           </v-col> -->
 
           <v-col md="3" class="d-flex justify-end">
-            <BotonBuscarAsignatura
-              :clave="searchQuery"
-              @search="redirectToAsignaturaSection"
-            />
+            <BotonBuscarAsignatura :clave="searchQuery" @search="redirectToAsignaturaSection" />
           </v-col>
         </v-row>
 
@@ -29,45 +26,26 @@
 
         <v-row v-if="!mostrarDetalles">
           <v-col cols="12">
-            <TablaPrincipalAsignaturas 
-              :items="filteredAsignaturas"
-              class="mb-4"
-            />
+            <TablaPrincipalAsignaturas :items="filteredAsignaturas" class="mb-4" />
           </v-col>
-
-          
         </v-row>
-          
-        
-       <template v-if="mostrarDetalles">
-  <v-btn
-    color="primary"
-    class="mb-4"
-    @click="returnToList"
-  >
-    <v-icon left>mdi-arrow-left</v-icon>
-    Volver a la lista
-  </v-btn>
-  <v-row>
-    <v-col cols="12" md="6">
-      <TablaDetalleAsignatura 
-        :clave="currentClaveAsignatura"
-        class="mb-4"
-      />
-      <TablaEstudiantesAsignatura 
-        :clave="currentClaveAsignatura"
-        class="mt-4"
-      />
-    </v-col>
-    
-    <v-col cols="12" md="6">
-      <TablaDocentesAsignatura 
-        :clave="currentClaveAsignatura"
-        class="mb-4"
-      />
-    </v-col>
-  </v-row>
-</template>
+
+        <template v-if="mostrarDetalles">
+          <v-btn color="primary" class="mb-4" @click="returnToList">
+            <v-icon left>mdi-arrow-left</v-icon>
+            Volver a la lista
+          </v-btn>
+          <v-row>
+            <v-col cols="12" md="6">
+              <TablaDetalleAsignatura :clave="currentClaveAsignatura" class="mb-4" />
+              <TablaEstudiantesAsignatura :clave="currentClaveAsignatura" class="mt-4" />
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <TablaDocentesAsignatura :clave="currentClaveAsignatura" class="mb-4" />
+            </v-col>
+          </v-row>
+        </template>
 
       </v-container>
     </v-main>
@@ -80,14 +58,16 @@ import { useRouter } from 'vue-router';
 
 
 import AppBar from '@/components/AppBar.vue';
-
 import AppDrawer from '@/components/drawer.vue';
+
 import DropdownButton from '@/components/paginaCompleta/dropDownButtonCom.vue';
+
 import TablaPrincipalAsignaturas from '@/components/paginaCompleta/tablaPrincipalAsigCom.vue';
 import TablaDocentesAsignatura from '@/components/paginaCompleta/tablaSecundariaAsigCom.vue';
 import TablaEstudiantesAsignatura from '@/components/paginaCompleta/tablaTerciariaAsigCom.vue';
-import BotonBuscarAsignatura from '@/components/paginaBuscar/botonBuscarEst.vue';
 import TablaDetalleAsignatura from '@/components/paginaCompleta/tablaDeUnRegistroAsigCom.vue';
+
+import BotonBuscarAsignatura from '@/components/paginaBuscar/botonBuscarEst.vue';
 import { useAsignaturaData } from '@/composables/asignaturaData';
 
 const drawer = ref(true);
@@ -95,7 +75,7 @@ const router = useRouter();
 const searchError = ref(null);
 const searchQuery = ref('');
 const mostrarDetalles = ref(false);
-const currentClaveAsignatura = ref(''); 
+const currentClaveAsignatura = ref('');
 
 const {
   searchPlaceholder,
@@ -121,13 +101,12 @@ const redirectToAsignaturaSection = (clave) => {
 };
 
 const returnToList = () => {
-  mostrarDetalles.value = false;      
-  currentClaveAsignatura.value = '';  
-  handleAsignaturasSelection();       
+  mostrarDetalles.value = false;
+  currentClaveAsignatura.value = '';
+  handleAsignaturasSelection();
 };
 
 onMounted(() => {
   handleAsignaturasSelection();
 });
 </script>
-

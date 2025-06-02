@@ -14,15 +14,15 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'docenteId',
         as: 'contratos'
       });
-      
+
       this.belongsTo(models.CategoriaEmpleado, {
         foreignKey: 'categoriaId',
         as: 'categoria'
       });
-      
+
       this.belongsToMany(models.Asignatura, {
         through: 'Contratos',
-        foreignKey: 'docenteId',  
+        foreignKey: 'docenteId',
         otherKey: 'asignaturaId',
         as: 'asignaturas'
       });

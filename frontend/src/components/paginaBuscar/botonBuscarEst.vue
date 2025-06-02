@@ -14,12 +14,6 @@ function emitClear() {
 </script>
 
 <template>
-  <v-text-field
-    v-model="query"
-    @keydown.enter="emitSearch"
-    @blur="emitSearch"
-    label="Buscar"
-    clearable
-    @click:clear="emitClear"
-  />
+  <v-text-field v-model="query" @keydown.enter="emitSearch" @blur="emitSearch" label="Buscar" clearable
+    @click:clear="emitClear" />
 </template>

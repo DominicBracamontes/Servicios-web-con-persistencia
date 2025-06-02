@@ -15,7 +15,7 @@ module.exports = {
           model: 'Estudiantes',
           key: 'matricula'
         }
-      ,onDelete: 'CASCADE',
+        , onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
       },
       asignaturaId: {
@@ -24,7 +24,7 @@ module.exports = {
         references: {
           model: 'Asignaturas',
           key: 'clave',
-          
+
         },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
